@@ -68,6 +68,7 @@ project-root/
 These colors are applied across the UI for a clean, modern dashboard experience.
 
 ⚙️ How to Run the Project (Local)
+
  Frontend Setup (React + Vite)
  ```
  cd frontend
@@ -90,3 +91,4 @@ npm start
 
 Backend runs at:
 http://localhost:5000/
+

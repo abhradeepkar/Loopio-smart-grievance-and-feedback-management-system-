@@ -86,7 +86,7 @@ cd backend
 
 npm install
 
-npm start
+npm run dev
 ```
 
 Backend runs at:
@@ -179,4 +179,5 @@ flowchart TD
     U3 --> END([END])
     D4 --> END
     A4 --> END
+
 

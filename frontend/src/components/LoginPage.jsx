@@ -4,6 +4,7 @@ import { useAuth } from './AuthProvider';
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
 import './LoginPage.css';
 import loopioLogo from '../assets/Loopio_logo_.png';
+import Popup from './Popup';
 
 const LoginPage = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +13,7 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('user');
     const [error, setError] = useState('');
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -30,12 +32,20 @@ const LoginPage = () => {
                 res = await login(email, password);
             } else {
                 console.log('Registering with:', { name, email, role }); // Don't log password
-                res = await register(name, email, password, role);
+                // Pass false to skip auto-login so we can show the popup
+                res = await register(name, email, password, role, false);
             }
 
             console.log('Auth response:', res);
 
             if (res.success) {
+                // If registration, show popup and stay on page (switch to login)
+                if (!isLogin) {
+                    setIsLoading(false);
+                    setShowSuccessPopup(true);
+                    return;
+                }
+
                 // Redirect based on role
                 const userRole = res.role || role; // Use role from response or state
                 console.log('Redirecting to dashboard for role:', userRole);
@@ -153,7 +163,21 @@ const LoginPage = () => {
                     </span>
                 </p>
             </div>
-        </div>
+
+
+            <Popup
+                isOpen={showSuccessPopup}
+                onClose={() => {
+                    setShowSuccessPopup(false);
+                    setIsLogin(true); // Switch to login mode
+                    setError(''); // Clear any errors
+                }}
+                title="Registration Successful"
+                message="Registration done! Now you can log in."
+                type="success"
+                confirmText="OK"
+            />
+        </div >
     );
 };
 

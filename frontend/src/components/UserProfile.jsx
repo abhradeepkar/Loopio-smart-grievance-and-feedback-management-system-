@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthProvider';
+import { FaCamera, FaTrash } from 'react-icons/fa';
+import Popup from './Popup';
 import './UserProfile.css';
 
 const UserProfile = ({ onClose }) => {
-    const { user, updateProfile } = useAuth();
+    const { user, updateProfile, deleteAccount } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         name: user.name,
@@ -14,20 +16,69 @@ const UserProfile = ({ onClose }) => {
     });
     const [message, setMessage] = useState('');
 
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [removePhoto, setRemovePhoto] = useState(false);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+            setRemovePhoto(false); // Reset delete flag if new file selected
+        }
+    };
+
+    const handleRemovePhoto = () => {
+        setSelectedFile(null);
+        setRemovePhoto(true);
+    };
+
     const handleSubmit = async () => {
-        const res = await updateProfile(formData);
+        // Create FormData to send file + text data
+        const data = new FormData();
+        data.append('name', formData.name);
+        data.append('email', formData.email);
+        data.append('phone', formData.phone);
+        data.append('address', formData.address);
+        if (formData.password) {
+            data.append('password', formData.password);
+        }
+        if (selectedFile) {
+            data.append('profilePicture', selectedFile);
+        }
+        if (removePhoto) {
+            data.append('deleteProfilePicture', 'true');
+        }
+
+        const res = await updateProfile(data); // Send FormData
         if (res.success) {
             setMessage('Profile updated successfully!');
             setTimeout(() => {
                 setIsEditing(false);
                 setMessage('');
+                setSelectedFile(null); // Reset file
+                setRemovePhoto(false);
             }, 1500);
         } else {
             setMessage(res.message || 'Update failed');
+        }
+    };
+
+    const handleDeleteClick = () => {
+        setShowDeleteConfirm(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        const res = await deleteAccount();
+        if (res.success) {
+            onClose();
+        } else {
+            setMessage(res.message || 'Failed to delete account');
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -40,8 +91,46 @@ const UserProfile = ({ onClose }) => {
                 </div>
 
                 <div className="profile-body">
-                    <div className="profile-avatar-large">
-                        {user.name.charAt(0)}
+                    <div className="profile-avatar-large" style={{ position: 'relative' }}>
+                        {(!removePhoto && (selectedFile || user.profilePicture)) ? (
+                            <img
+                                src={selectedFile ? URL.createObjectURL(selectedFile) : `http://localhost:5000/${user.profilePicture}`}
+                                alt="Profile"
+                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                        ) : (
+                            user.name.charAt(0).toUpperCase()
+                        )}
+                        {isEditing && (
+                            <div style={{ position: 'absolute', bottom: '0', right: '0', display: 'flex', gap: '5px' }}>
+                                <label htmlFor="profile-upload" className="upload-icon" style={{
+                                    background: 'linear-gradient(135deg, #00D2FF 0%, #3A7BD5 100%)',
+                                    color: 'white', borderRadius: '50%',
+                                    width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: 'pointer', border: '2px solid white',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}>
+                                    <FaCamera size={14} />
+                                    <input
+                                        id="profile-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={handleFileChange}
+                                    />
+                                </label>
+                                {(user.profilePicture || selectedFile) && !removePhoto && (
+                                    <button onClick={handleRemovePhoto} style={{
+                                        background: '#FF5C5C', color: 'white', borderRadius: '50%',
+                                        width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', border: '2px solid white',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }} title="Remove Photo">
+                                        <FaTrash size={12} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {message && <p className="status-message">{message}</p>}
@@ -142,13 +231,25 @@ const UserProfile = ({ onClose }) => {
                         </>
                     ) : (
                         <>
+                            <button className="delete-btn" onClick={handleDeleteClick}>Delete Account</button>
                             <button className="secondary-btn" onClick={onClose}>Close</button>
                             <button className="primary-btn" onClick={() => setIsEditing(true)}>Edit Profile</button>
                         </>
                     )}
                 </div>
-            </div>
-        </div>
+
+                <Popup
+                    isOpen={showDeleteConfirm}
+                    onClose={() => setShowDeleteConfirm(false)}
+                    title="Delete Account?"
+                    message="Are you sure you want to permanently delete your account? This action cannot be undone."
+                    type="danger"
+                    confirmText="Yes, Delete"
+                    cancelText="Cancel"
+                    onConfirm={handleConfirmDelete}
+                />
+            </div >
+        </div >
     );
 };
 

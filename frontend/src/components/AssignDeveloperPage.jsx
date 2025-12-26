@@ -7,7 +7,7 @@ const AssignDeveloperPage = () => {
     const { users, feedbacks, assignDeveloper, refreshFeedbacks } = useFeedback(); // refreshFeedbacks might need to be exposed in Context
     const [developers, setDevelopers] = useState([]);
     const [selectedFeedbackMap, setSelectedFeedbackMap] = useState({});
-    const [toast, setToast] = useState(null);
+    const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' }
 
     // Filter developers from users
     useEffect(() => {
@@ -16,8 +16,7 @@ const AssignDeveloperPage = () => {
         }
     }, [users]);
 
-    // Get feedbacks that are NOT Closed/Resolved and NOT assigned (or we can re-assign)
-    // For simplicity, listing all Open/Pending feedbacks suitable for assignment
+    // Get feedbacks that are NOT Closed/Resolved and NOT assigned
     const assignableFeedbacks = feedbacks.filter(fb => fb.status !== 'Closed' && fb.status !== 'Resolved');
 
     const handleFeedbackSelect = (devId, feedbackId) => {
@@ -27,7 +26,7 @@ const AssignDeveloperPage = () => {
         // Check if already assigned
         if (selectedFb && selectedFb.assignedTo) {
             const assigneeName = selectedFb.assignedTo.name || 'another developer';
-            setToast(`Task already assigned to ${assigneeName}`);
+            setToast({ message: `Task already assigned to ${assigneeName}`, type: 'error' });
 
             // Clear toast after 3s
             setTimeout(() => setToast(null), 3000);
@@ -50,7 +49,7 @@ const AssignDeveloperPage = () => {
 
         // Show toast
         const devName = developers.find(d => d._id === devId)?.name || 'Developer';
-        setToast(`Feedback assigned successfully to ${devName}!`);
+        setToast({ message: `Feedback assigned successfully to ${devName}!`, type: 'success' });
 
         // Reset selection
         setSelectedFeedbackMap(prev => ({ ...prev, [devId]: '' }));
@@ -70,8 +69,9 @@ const AssignDeveloperPage = () => {
         <div className="vision-card assign-dev-card" style={{ marginTop: '20px', position: 'relative' }}>
             {/* Toast Notification */}
             {toast && (
-                <div className="toast-notification">
-                    <FaCheckCircle /> {toast}
+                <div className={`toast-notification ${toast.type}`}>
+                    {toast.type === 'error' ? <FaUserSecret /> : <FaCheckCircle />}
+                    {toast.message}
                 </div>
             )}
 

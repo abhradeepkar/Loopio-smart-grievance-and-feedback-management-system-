@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
 :root {
   box-sizing: border-box;
 }
@@ -88,7 +90,6 @@ body {
 }
 
 /* --- VISION UI DASHBOARD STYLES --- */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
   --vision-bg: #0B1A30;

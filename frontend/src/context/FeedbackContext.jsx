@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
+import { useAuth } from '../components/AuthProvider';
+import { useToast } from './ToastContext';
 
 const FeedbackContext = createContext();
 const API_URL = 'http://localhost:5000/api/feedbacks';
@@ -9,12 +12,16 @@ export const useFeedback = () => useContext(FeedbackContext);
 export const FeedbackProvider = ({ children }) => {
     const [feedbacks, setFeedbacks] = useState([]);
     const [users, setUsers] = useState([]); // This will store developers for assignment
+    const [allUsers, setAllUsers] = useState([]); // This stores ALL users for management
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ status: '', priority: '', category: '' });
     const [loading, setLoading] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
     const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
     const [analytics, setAnalytics] = useState({ total: 0, status: {}, priority: {}, category: {} });
     const [notifications, setNotifications] = useState([]);
+
+    const { showToast } = useToast();
 
     const fetchNotifications = async () => {
         try {
@@ -46,6 +53,24 @@ export const FeedbackProvider = ({ children }) => {
             setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
         } catch (error) {
             console.error("Failed to mark read", error);
+            showToast('Failed to update notification', 'error');
+        }
+    };
+
+    const clearNotifications = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            await fetch(`http://localhost:5000/api/notifications`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setNotifications([]);
+            showToast('Notifications cleared', 'success');
+        } catch (error) {
+            console.error("Failed to clear notifications", error);
+            showToast('Failed to clear notifications', 'error');
         }
     };
 
@@ -96,9 +121,14 @@ export const FeedbackProvider = ({ children }) => {
                 } else {
                     setFeedbacks(data); // Fallback if API reverts
                 }
+            } else {
+                // If unauthorized, auth provider usually catches it, but for 500 error:
+                if (res.status >= 500) showToast('Failed to load feedbacks. Server error.', 'error');
             }
         } catch (error) {
             console.error('Error fetching feedbacks:', error);
+            // Avoiding spamming toast on every 5s polling if used, but here it's on mount/change
+            showToast('Network error loading feedbacks', 'error');
         }
     };
 
@@ -119,17 +149,180 @@ export const FeedbackProvider = ({ children }) => {
         }
     };
 
+    const fetchAllUsers = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const res = await fetch(`${AUTH_URL}/users`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setAllUsers(data);
+            }
+        } catch (error) {
+            console.error('Error fetching all users:', error);
+        }
+    };
+
     const updateFilter = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
         setPagination(prev => ({ ...prev, page: 1 })); // Reset to page 1 on filter change
     };
+
+    const { user } = useAuth();
+
+    // Refs to access latest state inside socket callbacks without dependencies
+    const filtersRef = useRef(filters);
+    const searchRef = useRef(searchQuery);
+    const userRef = useRef(user);
+
+    useEffect(() => {
+        filtersRef.current = filters;
+        searchRef.current = searchQuery;
+        userRef.current = user;
+    }, [filters, searchQuery, user]);
+
+    // Single socket instance management
+    const socketRef = useRef(null);
+
+    // Initial Socket Connection & Listeners
+    useEffect(() => {
+        // Initialize socket only once
+        if (!socketRef.current) {
+            socketRef.current = io('http://localhost:5000');
+            console.log('Socket initialized');
+        }
+
+        const socket = socketRef.current;
+
+        socket.on('connect', () => {
+            console.log('Socket connected:', socket.id);
+            setIsConnected(true);
+            if (userRef.current) {
+                const userId = userRef.current._id || userRef.current.id;
+                socket.emit('join_room', userId);
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+            setIsConnected(false);
+        });
+
+        socket.on('reconnect', (attemptNumber) => {
+            console.log('Socket reconnected:', attemptNumber);
+            setIsConnected(true);
+            if (userRef.current) {
+                const userId = userRef.current._id || userRef.current.id;
+                socket.emit('join_room', userId);
+            }
+        });
+
+        socket.on('room_joined_ack', (room) => {
+            console.log('ACK: Joined room', room);
+            // Optional: showToast('Real-time connection active', 'success');
+        });
+
+        socket.on('welcome', (data) => console.log('SOCKET: WELCOME RECEIVED', data));
+
+        // Listeners
+        const matchesFilters = (fb) => {
+            const f = filtersRef.current;
+            const s = searchRef.current;
+            if (f.status && fb.status !== f.status) return false;
+            if (f.priority && fb.priority !== f.priority) return false;
+            if (f.category && fb.category !== f.category) return false;
+            if (s) {
+                const query = s.toLowerCase();
+                return fb.title.toLowerCase().includes(query) || fb.description.toLowerCase().includes(query);
+            }
+            return true;
+        };
+
+        socket.on('feedback_added', (newFeedback) => {
+            if (matchesFilters(newFeedback)) {
+                setFeedbacks(prev => {
+                    if (prev.some(fb => fb._id === newFeedback._id)) return prev;
+                    return [newFeedback, ...prev];
+                });
+            }
+            // Only update local state, duplicate toast removed (handled by notification_new)
+        });
+
+        socket.on('feedback_updated', (updatedFeedback) => {
+            setFeedbacks(prev => {
+                const exists = prev.find(fb => fb._id === updatedFeedback._id);
+                const matches = matchesFilters(updatedFeedback);
+                if (exists && matches) {
+                    return prev.map(fb => fb._id === updatedFeedback._id ? updatedFeedback : fb);
+                } else if (exists && !matches) {
+                    return prev.filter(fb => fb._id !== updatedFeedback._id);
+                } else if (!exists && matches) {
+                    return [updatedFeedback, ...prev];
+                }
+                return prev;
+            });
+        });
+
+        socket.on('feedback_deleted', (id) => {
+            setFeedbacks(prev => prev.filter(fb => fb._id !== id));
+        });
+
+        socket.on('notification_new', (notification) => {
+            console.log('SOCKET EVENT: notification_new', notification);
+            // Since we are using rooms now, if we receive it, it IS for us.
+            // But we can double check ID to be safe if broadcasting was still active.
+
+            // Note: recipientId might be object or string depending on population
+            const recipientId = typeof notification.recipient === 'object' ? notification.recipient._id : notification.recipient;
+            const currentUserId = userRef.current ? (userRef.current._id || userRef.current.id) : null;
+
+            if (currentUserId && String(recipientId) === String(currentUserId)) {
+                setNotifications(prev => {
+                    if (prev.some(n => n._id === notification._id)) return prev;
+                    return [notification, ...prev];
+                });
+                showToast(notification.message, 'info');
+            }
+        });
+
+        socket.on('analytics_update', () => {
+            fetchAnalytics();
+        });
+
+        return () => {
+            // Cleanup listeners to avoid duplicates if re-mounted (though simple unplug is safer)
+            socket.off('connect');
+            socket.off('welcome');
+            socket.off('feedback_added');
+            socket.off('feedback_updated');
+            socket.off('feedback_deleted');
+            socket.off('notification_new');
+            socket.off('analytics_update');
+            socket.disconnect();
+            socketRef.current = null;
+        };
+    }, []);
+
+    // Watch for user changes to join room (if socket is already open)
+    useEffect(() => {
+        const socket = socketRef.current;
+        if (socket && user) {
+            const userId = user._id || user.id;
+            // Always try to join room when user becomes available or changes
+            console.log('User changed, emitting join_room:', userId);
+            socket.emit('join_room', userId);
+        }
+    }, [user]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
             // Debounce could be added here, but for now direct dependency
             const timer = setTimeout(() => {
-                Promise.all([fetchFeedbacks(), fetchDevelopers(), fetchAnalytics(), fetchNotifications()]).then(() => setLoading(false));
+                Promise.all([fetchFeedbacks(), fetchDevelopers(), fetchAllUsers(), fetchAnalytics(), fetchNotifications()]).then(() => setLoading(false));
             }, 500); // 500ms debounce
             return () => clearTimeout(timer);
         } else {
@@ -171,13 +364,14 @@ export const FeedbackProvider = ({ children }) => {
 
             if (res.ok) {
                 const newFeedback = await res.json();
-                setFeedbacks([newFeedback, ...feedbacks]);
-                fetchAnalytics(); // Refresh analytics
-                fetchNotifications(); // Refresh notifications incase of auto-notify
+                showToast('Feedback submitted successfully!', 'success');
                 return { success: true };
             }
+            const errData = await res.json();
+            showToast(errData.message || 'Failed to submit feedback', 'error');
         } catch (error) {
             console.error('Error adding feedback:', error);
+            showToast('Network error submitting feedback', 'error');
         }
         return { success: false };
     };
@@ -192,11 +386,18 @@ export const FeedbackProvider = ({ children }) => {
                 },
                 body: JSON.stringify({ status, ...additionalData })
             });
-            const data = await res.json();
-            setFeedbacks(feedbacks.map(fb => fb._id === id ? data : fb));
-            fetchAnalytics(); // Refresh analytics
+
+            if (res.ok) {
+                const data = await res.json();
+                setFeedbacks(feedbacks.map(fb => fb._id === id ? data : fb));
+                fetchAnalytics(); // Refresh analytics
+                showToast(`Status updated to ${status}`, 'success');
+            } else {
+                showToast('Failed to update status', 'error');
+            }
         } catch (error) {
             console.error('Error updating feedback:', error);
+            showToast('Network error updating status', 'error');
         }
     };
 
@@ -214,9 +415,13 @@ export const FeedbackProvider = ({ children }) => {
             if (res.ok) {
                 const updatedFeedback = await res.json();
                 setFeedbacks(prev => prev.map(fb => fb._id === feedbackId ? updatedFeedback : fb));
+                showToast('Developer assigned successfully', 'success');
+            } else {
+                showToast('Failed to assign developer', 'error');
             }
         } catch (error) {
             console.error('Error assigning developer:', error);
+            showToast('Network error assigning developer', 'error');
         }
     };
 
@@ -234,9 +439,13 @@ export const FeedbackProvider = ({ children }) => {
             if (res.ok) {
                 const updatedFeedback = await res.json();
                 setFeedbacks(prev => prev.map(fb => fb._id === feedbackId ? updatedFeedback : fb));
+                // showToast('Comment posted', 'success'); // Optional, maybe too noisy
+            } else {
+                showToast('Failed to post comment', 'error');
             }
         } catch (error) {
             console.error('Error adding comment:', error);
+            showToast('Network error posting comment', 'error');
         }
     };
 
@@ -255,10 +464,13 @@ export const FeedbackProvider = ({ children }) => {
                 const updatedFeedback = await res.json();
                 setFeedbacks(prev => prev.map(fb => fb._id === id ? updatedFeedback : fb));
                 fetchAnalytics(); // Refresh analytics
+                showToast('Feedback updated successfully', 'success');
                 return { success: true };
             }
+            showToast('Failed to update feedback', 'error');
         } catch (error) {
             console.error('Error editing feedback:', error);
+            showToast('Network error editing feedback', 'error');
         }
         return { success: false };
     };
@@ -276,13 +488,14 @@ export const FeedbackProvider = ({ children }) => {
             if (res.ok) {
                 setFeedbacks(prev => prev.filter(fb => fb._id !== id));
                 fetchAnalytics(); // Refresh analytics
+                showToast('Feedback deleted', 'success');
             } else {
                 const data = await res.json();
-                alert(data.message || 'Failed to delete');
+                showToast(data.message || 'Failed to delete', 'error');
             }
         } catch (error) {
             console.error('Error deleting feedback:', error);
-            alert('Error deleting feedback');
+            showToast('Error deleting feedback', 'error');
         }
     };
 
@@ -303,13 +516,16 @@ export const FeedbackProvider = ({ children }) => {
                 const updatedFeedback = await res.json();
                 console.log('Delete successful, updated feedback:', updatedFeedback);
                 setFeedbacks(prev => prev.map(fb => fb._id === feedbackId ? updatedFeedback : fb));
+                showToast('Comment deleted', 'info');
                 return { success: true };
             } else {
                 const errData = await res.json();
                 console.error('Delete failed:', errData);
+                showToast(errData.message || 'Failed to delete comment', 'error');
             }
         } catch (error) {
             console.error('Error deleting comment:', error);
+            showToast('Network error deleting comment', 'error');
         }
         return { success: false };
     };
@@ -321,11 +537,12 @@ export const FeedbackProvider = ({ children }) => {
 
     return (
         <FeedbackContext.Provider value={{
-            feedbacks, users, searchQuery, setSearchQuery, pagination, analytics, notifications, filters, updateFilter,
+            feedbacks, users, allUsers, searchQuery, setSearchQuery, pagination, analytics, notifications, filters, updateFilter,
             addFeedback, updateFeedbackStatus, assignDeveloper, editFeedback,
             addComment, deleteFeedback, deleteComment, updateUserRole,
-            refreshFeedbacks: fetchFeedbacks, reloadAnalytics: fetchAnalytics,
-            markNotificationAsRead, refreshNotifications: fetchNotifications
+            refreshFeedbacks: fetchFeedbacks, reloadAnalytics: fetchAnalytics, refreshUsers: fetchAllUsers,
+            markNotificationAsRead, refreshNotifications: fetchNotifications, clearNotifications,
+            isConnected
         }}>
             {children}
         </FeedbackContext.Provider>

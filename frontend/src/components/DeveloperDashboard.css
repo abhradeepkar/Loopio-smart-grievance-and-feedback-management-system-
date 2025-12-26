@@ -259,6 +259,13 @@
     align-items: center;
 }
 
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
 .quick-actions-card {
     width: 100%;
     display: flex;
@@ -644,51 +651,19 @@
         flex-wrap: nowrap !important;
     }
 
-    /* Optimize column widths for mobile */
-    .vision-table th:nth-child(1) {
-        width: 25% !important;
-    }
-
-    .vision-table th:nth-child(2) {
-        width: 15% !important;
-    }
-
-    .vision-table th:nth-child(3) {
-        width: 15% !important;
-    }
-
-    .vision-table th:nth-child(4) {
-        width: 45% !important;
-        padding-left: 15px !important;
-        /* Add gap between Status and Action */
-    }
-
-    .vision-table td:nth-child(4) {
-        padding-left: 15px !important;
-        /* Apply to data cells too */
-    }
-
-    .status-select,
-    .date-input {
-        width: auto !important;
-        min-width: 90px !important;
-        flex: 1 !important;
-        max-width: none !important;
-    }
-
-    /* FIX: Remove right-side space by pulling table to edges */
+    /* Allow table to scroll horizontally on mobile */
     .table-responsive {
-        width: calc(100% + 30px);
-        margin-left: -15px;
-        margin-right: -15px;
-        border-radius: 0;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        border-radius: var(--dev-radius);
+        overflow-x: auto;
     }
 
-    /* Force Table Element NOT to scroll itself */
-    .table-responsive .vision-table {
-        overflow: visible !important;
-        display: table !important;
-        width: 100%;
+    /* Ensure table maintains min-width to trigger scroll */
+    .vision-table {
+        min-width: 600px;
+        /* Ensures content isn't squashed */
     }
 
     .vision-card {
@@ -761,4 +736,29 @@
     .vision-main {
         padding: 40px;
     }
+}
+
+/* Progress Page Specifics */
+/* Mobile First: Inherits 1fr from .section-charts */
+
+/* Ensure it stays 2 equal columns on larger screens */
+@media (min-width: 1024px) {
+    .progress-charts {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+/* Sidebar Hover Fix for Light Mode */
+[data-theme='light'] .sidebar-nav .nav-item:hover,
+[data-theme='light'] .sidebar-nav .nav-item.active {
+    background: #E2E8F0 !important;
+    /* Light Gray Background */
+    color: #0B1A30 !important;
+    /* Dark Text */
+}
+
+[data-theme='light'] .sidebar-nav .nav-item:hover .icon-box,
+[data-theme='light'] .sidebar-nav .nav-item.active .icon-box {
+    color: #0B1A30 !important;
+    /* Dark Icon */
 }

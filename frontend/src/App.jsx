@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+
 import LoginPage from './components/LoginPage';
 import UserDashboard from './components/UserDashboard';
 import MyFeedbacksPage from './components/MyFeedbacksPage';
 import DeveloperDashboard from './components/DeveloperDashboard';
+import DeveloperLayout from './components/DeveloperLayout';
+import DeveloperAssignedTasks from './components/DeveloperAssignedTasks';
+import DeveloperFeedbackToFix from './components/DeveloperFeedbackToFix';
+import DeveloperProgress from './components/DeveloperProgress';
 import { useAuth } from './components/AuthProvider';
 
 import AdminLayout from './components/AdminLayout';
@@ -12,6 +17,8 @@ import AssignDeveloperPage from './components/AssignDeveloperPage';
 import AdminDashboard from './components/AdminDashboard';
 import AllFeedbacksPage from './components/AllFeedbacksPage';
 import UserProfile from './components/UserProfile';
+import UserLayout from './components/UserLayout';
+import SettingsPage from './components/SettingsPage';
 
 import HomePage from './components/HomePage';
 
@@ -34,6 +41,7 @@ const ProtectedRoute = ({ children, role }) => {
 
 const App = () => {
   return (
+
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
@@ -43,18 +51,14 @@ const App = () => {
         path="/user"
         element={
           <ProtectedRoute role="user">
-            <UserDashboard />
+            <UserLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/user/my-feedbacks"
-        element={
-          <ProtectedRoute role="user">
-            <MyFeedbacksPage />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route index element={<UserDashboard />} />
+        <Route path="my-feedbacks" element={<MyFeedbacksPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
       <Route
         path="/admin"
         element={
@@ -67,15 +71,22 @@ const App = () => {
         <Route path="users" element={<UsersPage />} />
         <Route path="assign" element={<AssignDeveloperPage />} />
         <Route path="feedbacks" element={<AllFeedbacksPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route
         path="/developer"
         element={
           <ProtectedRoute role="developer">
-            <DeveloperDashboard />
+            <DeveloperLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<DeveloperDashboard />} />
+        <Route path="tasks" element={<DeveloperAssignedTasks />} />
+        <Route path="feedback-to-fix" element={<DeveloperFeedbackToFix />} />
+        <Route path="progress" element={<DeveloperProgress />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
     </Routes>
   );
 };

@@ -9,8 +9,41 @@ const { errorHandler } = require('./middleware/errorMiddleware');
 
 dotenv.config();
 
+const http = require('http');
+const { Server } = require('socket.io');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Allow all origins for development, restrict in production
+        methods: ["GET", "POST", "PUT", "DELETE"]
+    }
+});
+
+// Make io accessible in routes
+app.set('socketio', io);
+
+io.on('connection', (socket) => {
+    console.log(`New client connected: ${socket.id}`);
+
+    socket.on('join_room', (userId) => {
+        if (userId) {
+            socket.join(userId);
+            console.log(`Socket ${socket.id} joined room ${userId}`);
+            socket.emit('room_joined_ack', userId);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected');
+    });
+});
 
 //  SECURITY MIDDLEWARE
 app.use(helmet({
@@ -56,6 +89,6 @@ app.get('/', (req, res) => {
 //  ERROR HANDLER
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

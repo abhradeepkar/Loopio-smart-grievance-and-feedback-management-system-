@@ -4,15 +4,11 @@ import { useFeedback } from '../context/FeedbackContext';
 import './NotificationBell.css';
 
 const NotificationBell = () => {
-    const { notifications, markNotificationAsRead, refreshNotifications } = useFeedback();
+    const { notifications, markNotificationAsRead, refreshNotifications, clearNotifications } = useFeedback();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
-    // Poll for notifications via context refresh
-    useEffect(() => {
-        const interval = setInterval(refreshNotifications, 15000);
-        return () => clearInterval(interval);
-    }, [refreshNotifications]);
+
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -37,7 +33,17 @@ const NotificationBell = () => {
 
             {isOpen && (
                 <div className="notification-dropdown">
-                    <div className="notification-header">Notifications</div>
+                    <div className="notification-header">
+                        Notifications
+                        {notifications && notifications.length > 0 && (
+                            <span
+                                onClick={(e) => { e.stopPropagation(); clearNotifications(); }}
+                                style={{ float: 'right', cursor: 'pointer', fontSize: '0.8rem', color: '#00D9F4' }}
+                            >
+                                Clear All
+                            </span>
+                        )}
+                    </div>
                     {notifications && notifications.length > 0 ? (
                         <ul className="notification-list">
                             {notifications.map((note) => (

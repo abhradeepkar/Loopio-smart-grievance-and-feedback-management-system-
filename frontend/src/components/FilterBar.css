@@ -2,6 +2,8 @@
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
+    align-items: center;
+    /* Vertically align clear button */
     margin-bottom: 20px;
 }
 
@@ -58,4 +60,25 @@
 
 .btn-clear-filters:hover {
     background-color: rgba(255, 92, 92, 0.1);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .filter-bar-container {
+        gap: 10px;
+    }
+
+    .filter-select {
+        flex: 1 1 100%;
+        /* Grow to full width */
+        min-width: unset;
+        /* Allow shrinking if needed, but 100% basis handles it */
+        width: 100%;
+    }
+
+    .btn-clear-filters {
+        width: 100%;
+        text-align: center;
+        margin-top: 5px;
+    }
 }

@@ -11,9 +11,16 @@ const FeedbackForm = ({ onClose, initialData = null }) => {
         description: '',
         file: null
     });
+    const [uploadSuccess, setUploadSuccess] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
+
+        if (name === 'file' && files && files[0]) {
+            setUploadSuccess(true);
+            setTimeout(() => setUploadSuccess(false), 2000);
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: files ? files[0] : value
@@ -91,6 +98,7 @@ const FeedbackForm = ({ onClose, initialData = null }) => {
                             name="file"
                             onChange={handleChange}
                         />
+                        {uploadSuccess && <p className="upload-success-message">File Uploaded</p>}
                     </div>
 
                     <div className="modal-actions">

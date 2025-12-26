@@ -9,7 +9,7 @@ import {
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-    const { feedbacks, users, analytics, notifications } = useFeedback();
+    const { feedbacks, users, analytics, notifications, isConnected } = useFeedback();
     const [selectedFeedback, setSelectedFeedback] = useState(null);
 
     // Analytics from Backend
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
 
                 {/* Side Cards: Notifications & Quick Info */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div className="vision-card">
+                    <div className="vision-card" style={{ marginTop: '15px' }}>
                         <h4 className="side-card-title">Notifications</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {notifications && notifications.length > 0 ? (
@@ -159,16 +159,24 @@ const AdminDashboard = () => {
                         <div className="quick-assign-item">
                             <div className="quick-assign-info">
                                 <p>Server Status</p>
-                                <span style={{ color: '#01B574' }}>Operational</span>
+                                <span style={{ color: isConnected ? '#01B574' : '#E31A1A' }}>
+                                    {isConnected ? 'Operational' : 'Disconnected'}
+                                </span>
                             </div>
-                            <FaCheckCircleFilled style={{ color: '#01B574' }} />
+                            {isConnected ? (
+                                <FaCheckCircleFilled style={{ color: '#01B574' }} />
+                            ) : (
+                                <FaExclamationTriangle style={{ color: '#E31A1A' }} />
+                            )}
                         </div>
                         <div className="quick-assign-item">
                             <div className="quick-assign-info">
                                 <p>Database</p>
-                                <span style={{ color: '#01B574' }}>Connected</span>
+                                <span style={{ color: isConnected ? '#01B574' : '#FFB75E' }}>
+                                    {isConnected ? 'Connected' : 'Connecting...'}
+                                </span>
                             </div>
-                            <FaCheckCircleFilled style={{ color: '#01B574' }} />
+                            <FaCheckCircleFilled style={{ color: isConnected ? '#01B574' : '#FFB75E' }} />
                         </div>
                     </div>
                 </div>

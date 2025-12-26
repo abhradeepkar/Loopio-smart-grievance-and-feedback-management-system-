@@ -32,10 +32,10 @@ const AllFeedbacksPage = () => {
                             cursor: 'pointer'
                         }}
                     >
-                        <option value="All">All Status</option>
-                        <option value="Submitted">Submitted</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
+                        <option value="All" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>All Status</option>
+                        <option value="Submitted" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Submitted</option>
+                        <option value="In Progress" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>In Progress</option>
+                        <option value="Resolved" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Resolved</option>
                     </select>
                 </div>
             </div>
@@ -56,7 +56,20 @@ const AllFeedbacksPage = () => {
                         {filteredFeedbacks.map(fb => (
                             <tr key={fb._id} onClick={() => setSelectedFeedback(fb)} className="clickable-row">
                                 <td style={{ fontWeight: 500 }}>{fb.title}</td>
-                                <td>{fb.submittedBy?.name || 'Unknown'}</td>
+                                <td style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    {fb.submittedBy?.profilePicture ? (
+                                        <img
+                                            src={`http://localhost:5000/${fb.submittedBy.profilePicture}`}
+                                            alt="Avatar"
+                                            style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-color), var(--accent-hover))', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                                            {(fb.submittedBy?.name || 'U').charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    {fb.submittedBy?.name || 'Unknown'}
+                                </td>
                                 <td>
                                     <span className={`status-badge ${fb.status.toLowerCase().replace(' ', '-')}`}>
                                         {fb.status}

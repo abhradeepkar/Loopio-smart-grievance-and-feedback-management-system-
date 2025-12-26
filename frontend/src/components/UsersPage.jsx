@@ -5,7 +5,7 @@ import './AdminDashboard.css'; // Inherit global admin styles
 import './UsersPage.css'; // Component specific responsive styles
 
 const UsersPage = () => {
-    const { users, feedbacks } = useFeedback();
+    const { allUsers: users, feedbacks } = useFeedback();
     const [searchQuery, setSearchQuery] = useState('');
 
     // Filter users based on search
@@ -20,6 +20,36 @@ const UsersPage = () => {
         const totalSubmitted = userFeedbacks.length;
         const resolvedCount = userFeedbacks.filter(fb => fb.status === 'Resolved' || fb.status === 'Closed').length;
         return { totalSubmitted, resolvedCount };
+    };
+
+    const handleExportCSV = () => {
+        if (!filteredUsers.length) return;
+
+        const headers = ['Name', 'Email', 'Role', 'Total Submitted', 'Total Resolved'];
+        const csvRows = [headers.join(',')];
+
+        filteredUsers.forEach(user => {
+            const { totalSubmitted, resolvedCount } = getUserStats(user._id);
+            const row = [
+                `"${user.name}"`,
+                `"${user.email}"`,
+                `"${user.role}"`,
+                totalSubmitted,
+                resolvedCount
+            ];
+            csvRows.push(row.join(','));
+        });
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'users_export.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -42,7 +72,7 @@ const UsersPage = () => {
                             className="search-input"
                         />
                     </div>
-                    <button className="btn-vision-primary">
+                    <button className="btn-vision-primary" onClick={handleExportCSV}>
                         <FaFileExport />
                         <span>Export CSV</span>
                     </button>
@@ -64,8 +94,16 @@ const UsersPage = () => {
                             const { totalSubmitted, resolvedCount } = getUserStats(user._id);
                             return (
                                 <tr key={user._id} className="hover-row">
-                                    <td className="company-cell">
-                                        <div className="logo-box atlassian">{user.name.charAt(0).toUpperCase()}</div>
+                                    <td className="company-cell" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        {user.profilePicture ? (
+                                            <img
+                                                src={`http://localhost:5000/${user.profilePicture}`}
+                                                alt={user.name}
+                                                style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-color), var(--accent-hover))', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{user.name.charAt(0).toUpperCase()}</div>
+                                        )}
                                         <span style={{ fontWeight: '600' }}>{user.name}</span>
                                     </td>
                                     <td>{user.email}</td>

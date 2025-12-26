@@ -1,4 +1,4 @@
-const Notification = require('../models/Notification');  
+const Notification = require('../models/Notification');
 // Import Notification model for DB operations
 
 // @desc Get user notifications
@@ -14,11 +14,11 @@ const getNotifications = async (req, res) => {
 
         console.log('Found notifications:', notifications.length);
 
-        res.status(200).json(notifications);  
+        res.status(200).json(notifications);
         // Send notifications back to frontend
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });  
+        res.status(500).json({ message: 'Server error' });
         // Generic error response
     }
 };
@@ -38,7 +38,7 @@ const markAsRead = async (req, res) => {
 
         // Check if this notification belongs to the logged-in user
         if (notification.recipient.toString() !== req.user.id) {
-            return res.status(401).json({ message: 'Not authorized' });  
+            return res.status(401).json({ message: 'Not authorized' });
             // User trying to access others' notification
         }
 
@@ -46,33 +46,101 @@ const markAsRead = async (req, res) => {
         notification.read = true;
         await notification.save(); // Save updated notification in DB
 
-        res.status(200).json(notification);  
+        res.status(200).json(notification);
         // Send updated notification
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });  
+        res.status(500).json({ message: 'Server error' });
         // Generic backend error
     }
 };
 
 // Internal Helper to create notification
-const createNotification = async (recipientId, message, type = 'info', relatedLink = '') => {
+const createNotification = async (recipientId, message, type = 'info', relatedLink = '', io = null) => {
     try {
         // Create and store a new notification
-        await Notification.create({
+        const notification = await Notification.create({
             recipient: recipientId,  // User who will receive it
             message,                 // Notification text
             type,                    // info/warning/success/error
             relatedLink              // Optional link for navigation
         });
+
+        if (io) {
+            // Manually construct payload to avoid Mongoose serialization issues
+            const payload = {
+                _id: notification._id.toString(),
+                recipient: recipientId.toString(),
+                message: notification.message,
+                type: notification.type,
+                relatedLink: notification.relatedLink,
+                read: notification.read,
+                createdAt: notification.createdAt
+            };
+
+            // EMIT TO SPECIFIC USER ROOM ONLY
+            io.to(recipientId.toString()).emit('notification_new', payload);
+            console.log(`Emitted notification to room: ${recipientId.toString()}`);
+        }
+
+        return notification;
     } catch (error) {
-        console.error('Notification creation failed:', error);  
-        // Log if creation fails
+        console.error('Notification creation failed:', error);
+    }
+};
+
+// @desc Clear all notifications
+// @route DELETE /api/notifications
+// @access Private
+const clearAllNotifications = async (req, res) => {
+    try {
+        await Notification.deleteMany({ recipient: req.user.id });
+        res.status(200).json({ message: 'All notifications cleared' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc Test Socket Broadcast
+// @route GET /api/notifications/test
+// @access Public
+const testSocket = async (req, res) => {
+    try {
+        const io = req.app.get('socketio');
+        if (io) {
+            const recipient = req.query.recipient;
+            const payload = {
+                _id: Date.now().toString(),
+                recipient: recipient || req.user?.id || 'TEST',
+                message: recipient ? 'Private Socket Test' : 'Broadcast Socket Test',
+                type: 'info',
+                read: false,
+                createdAt: new Date()
+            };
+
+            if (recipient) {
+                console.log(`SOCKET: Emitting to room ${recipient}`);
+                io.to(recipient).emit('notification_new', payload);
+            } else {
+                console.log('SOCKET: Broadcasting to all');
+                io.emit('notification_new', payload);
+            }
+
+            res.status(200).json({ message: 'Emitted', payload });
+        } else {
+            res.status(500).json({ message: 'No IO found' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
     }
 };
 
 module.exports = {
     getNotifications,  // Export fetch function
     markAsRead,        // Export read update function
-    createNotification // Export create helper
+    createNotification,// Export create helper
+    clearAllNotifications, // Export clear all function
+    testSocket // Export test function
 };

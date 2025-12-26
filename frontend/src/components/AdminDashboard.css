@@ -398,37 +398,7 @@
     margin: 0;
 }
 
-/* Toast Notification */
-.toast-notification {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(1, 181, 116, 0.2);
-    /* Green tint for success */
-    border: 1px solid #01B574;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    z-index: 100;
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+/* Toast Notification block removed - defined at end of file */
 
 /* Hover Row Effect */
 .hover-row:hover {
@@ -473,7 +443,7 @@
 
 [data-theme='light'] .assign-select,
 [data-theme='light'] .role-select {
-    background: #FFFFFF;
+    background: #FFFFFF !important;
     border-color: #E2E8F0;
 }
 
@@ -491,9 +461,9 @@
 /* Custom Selects & Buttons */
 .assign-select,
 .role-select {
-    background: #0B1A30;
+    background: #0B1A30 !important;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: #fff !important;
     border-radius: 8px;
     padding: 6px 10px;
     outline: none;
@@ -620,14 +590,18 @@
 }
 
 /* Toast Notification */
+/* Toast Notification */
+/* Toast Notification */
 .toast-notification {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    background: rgba(1, 181, 116, 0.2);
-    /* Green tint for success */
-    border: 1px solid #01B574;
-    color: #fff;
+    background: rgba(11, 26, 48, 0.9) !important;
+    /* Transparent/Glassy Dark */
+    border: 1px solid #0075FF !important;
+    /* Blue Border */
+    color: #01B574 !important;
+    /* Green Text */
     padding: 12px 20px;
     border-radius: 12px;
     display: flex;
@@ -635,8 +609,16 @@
     gap: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
-    z-index: 100;
+    z-index: 1000;
     animation: slideIn 0.3s ease-out;
+}
+
+.toast-notification.error {
+    background: rgba(11, 26, 48, 0.9) !important;
+    border-color: #0075FF !important;
+    /* Blue Border for error too */
+    color: #E31A1A !important;
+    /* Red Text */
 }
 
 @keyframes slideIn {
@@ -692,9 +674,14 @@
     color: #0B1A30;
 }
 
+[data-theme='light'] .quick-assign-info span {
+    color: #718096;
+    /* Darker Gray for subtext visibility */
+}
+
 [data-theme='light'] .assign-select,
 [data-theme='light'] .role-select {
-    background: #FFFFFF;
+    background: #FFFFFF !important;
     border-color: #E2E8F0;
 }
 
@@ -736,4 +723,31 @@
 
 .btn-vision-primary svg {
     font-size: 14px;
+}
+
+/* Sidebar Hover Fix for Light Mode */
+[data-theme='light'] .sidebar-nav .nav-item:hover,
+[data-theme='light'] .sidebar-nav .nav-item.active {
+    background: #E2E8F0 !important;
+    /* Light Gray Background */
+    color: #0B1A30 !important;
+    /* Dark Text */
+}
+
+[data-theme='light'] .sidebar-nav .nav-item:hover .icon-box,
+[data-theme='light'] .sidebar-nav .nav-item.active .icon-box {
+    color: #0B1A30 !important;
+    /* Dark Icon */
+}
+
+/* Force Transparent Toast in Light Mode */
+[data-theme='light'] .toast-notification,
+[data-theme='light'] .toast-notification.error {
+    background: rgba(11, 26, 48, 0.9) !important;
+    color: #01B574 !important;
+    border-color: #0075FF !important;
+}
+
+[data-theme='light'] .toast-notification.error {
+    color: #E31A1A !important;
 }

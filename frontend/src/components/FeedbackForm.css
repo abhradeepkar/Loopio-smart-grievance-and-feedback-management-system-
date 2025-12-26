@@ -177,3 +177,11 @@ textarea {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
 }
+
+.upload-success-message {
+    color: #01B574;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    animation: fadeIn 0.3s ease-in;
+}

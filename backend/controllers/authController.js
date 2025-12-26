@@ -41,6 +41,8 @@ const registerUser = async (req, res) => {
                 _id: user.id,                              // User ID
                 name: user.name,
                 email: user.email,
+                phone: user.phone,
+                address: user.address,
                 role: user.role,
                 token: generateToken(user.id)              // Generate and return JWT token
             });
@@ -69,6 +71,8 @@ const loginUser = async (req, res) => {
                 _id: user.id,
                 name: user.name,
                 email: user.email,
+                phone: user.phone,
+                address: user.address,
                 role: user.role,
                 token: generateToken(user.id)              // Return token on successful login
             });
@@ -101,6 +105,13 @@ const updateUserProfile = async (req, res) => {
             user.phone = req.body.phone || user.phone;
             user.address = req.body.address || user.address;
 
+            // Handle Profile Picture Upload or Deletion
+            if (req.file) {
+                user.profilePicture = req.file.path.replace(/\\/g, "/"); // Normalize path
+            } else if (req.body.deleteProfilePicture === 'true') {
+                user.profilePicture = undefined; // Remove profile picture
+            }
+
             // Password update should be done via /change-password route for security
 
             const updatedUser = await user.save();
@@ -112,6 +123,7 @@ const updateUserProfile = async (req, res) => {
                 phone: updatedUser.phone,
                 address: updatedUser.address,
                 role: updatedUser.role,
+                profilePicture: updatedUser.profilePicture,
                 token: generateToken(updatedUser.id)
             });
         } else {
@@ -123,8 +135,21 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
-// @desc    Get all users (Admin only)
+// @desc    Get standard users only (Admin only)
 // @route   GET /api/users
+// @access  Private (Admin)
+const getStandardUsers = async (req, res) => {
+    try {
+        const users = await User.find({ role: 'user' }).select('-password');
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Get all users (Admin only)
+// @route   GET /api/users/all
 // @access  Private (Admin)
 const getAllUsers = async (req, res) => {
     try {
@@ -169,7 +194,27 @@ const deleteMyAccount = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        const userName = user.name;
+        const userRole = user.role;
+
         await user.deleteOne();
+
+        // Notify Admins about account deletion
+        if (req.app.get('socketio')) {
+            const admins = await User.find({ role: 'admin' });
+            const { createNotification } = require('./notificationController');
+
+            await Promise.all(admins.map(admin => {
+                return createNotification(
+                    admin._id,
+                    `🗑️ Account Deleted: ${userName} (${userRole})`,
+                    'alert',
+                    null,
+                    req.app.get('socketio')
+                );
+            }));
+        }
+
         res.json({ message: 'User deleted successfully' });
     } catch (error) {
         console.error(error);
@@ -286,6 +331,7 @@ module.exports = {
     updateUserProfile,
     getDevelopers,
     getAllUsers,
+    getStandardUsers,
     changePassword,
     deleteMyAccount,
     forgotPassword,

@@ -273,3 +273,28 @@
         display: block;
     }
 }
+
+/* Light Mode Sidebar Overrides */
+[data-theme='light'] .vision-sidebar {
+    background: #FFFFFF;
+    border-right: 1px solid #E2E8F0;
+}
+
+[data-theme='light'] .sidebar-nav .nav-item {
+    color: #4A5568;
+}
+
+[data-theme='light'] .sidebar-nav .nav-item:hover,
+[data-theme='light'] .sidebar-nav .nav-item.active {
+    background: #E2E8F0 !important;
+    color: #0B1A30 !important;
+}
+
+[data-theme='light'] .logo-text {
+    color: #0B1A30 !important;
+}
+
+[data-theme='light'] .sidebar-footer-card p {
+    color: #718096 !important;
+    font-weight: 600;
+}

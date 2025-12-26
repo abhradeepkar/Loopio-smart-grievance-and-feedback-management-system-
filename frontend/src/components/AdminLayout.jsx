@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthProvider';
 import { useTheme } from '../context/ThemeContext';
 import { useFeedback } from '../context/FeedbackContext';
 import NotificationBell from './NotificationBell';
 import {
     FaBars, FaTimes, FaHome, FaFileAlt, FaUser, FaCog,
-    FaSun, FaMoon, FaSignOutAlt
+    FaSun, FaMoon, FaSignOutAlt, FaUsers, FaUserPlus, FaUserCircle
 } from 'react-icons/fa';
 import './AdminDashboard.css';
 import loopioLogo from '../assets/Loopio_logo_.png';
 
 const AdminLayout = ({ onProfileClick }) => {
+    const { user } = useAuth(); // Get user from context
     const { theme, toggleTheme } = useTheme();
     const { searchQuery, setSearchQuery } = useFeedback();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,8 +20,22 @@ const AdminLayout = ({ onProfileClick }) => {
     // const navigate = useNavigate(); // Not currently used but good to have
 
     // User Initial for Profile Bubble
-    const adminName = "Admin User";
+    const adminName = user?.name || "Admin User";
     const userInitial = adminName.charAt(0).toUpperCase();
+
+    // Helper to render profile content
+    const renderProfileContent = () => {
+        if (user?.profilePicture) {
+            return (
+                <img
+                    src={`http://localhost:5000/${user.profilePicture}`}
+                    alt="Profile"
+                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+            );
+        }
+        return userInitial;
+    };
 
     return (
         <div className="vision-dashboard">
@@ -58,21 +74,21 @@ const AdminLayout = ({ onProfileClick }) => {
                     </NavLink>
 
                     <NavLink to="/admin/assign" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <div className="icon-box"><FaUser /></div>
+                        <div className="icon-box"><FaUserPlus /></div>
                         <span>Assign Developer</span>
                     </NavLink>
                     <NavLink to="/admin/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                        <div className="icon-box"><FaUser /></div>
+                        <div className="icon-box"><FaUsers /></div>
                         <span>Users</span>
                     </NavLink>
                     <a href="#" className="nav-item" onClick={(e) => { e.preventDefault(); onProfileClick(); }}>
-                        <div className="icon-box"><FaUser /></div>
+                        <div className="icon-box"><FaUserCircle /></div>
                         <span>Profile</span>
                     </a>
-                    <a href="#" className="nav-item">
+                    <NavLink to="/admin/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <div className="icon-box"><FaCog /></div>
                         <span>Settings</span>
-                    </a>
+                    </NavLink>
                 </nav>
 
                 <div className="sidebar-footer-card">
@@ -116,7 +132,7 @@ const AdminLayout = ({ onProfileClick }) => {
 
                         <div className="profile-section">
                             <div className="profile-bubble" onClick={() => setShowProfileMenu(!showProfileMenu)}>
-                                {userInitial}
+                                {renderProfileContent()}
                             </div>
                             {showProfileMenu && (
                                 <div className="profile-dropdown">

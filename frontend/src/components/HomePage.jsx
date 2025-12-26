@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaRocket, FaChartLine, FaUsers, FaCogs, FaGithub, FaGoogle, FaLinkedin, FaFacebook, FaStar, FaBolt, FaUserShield, FaBars, FaTimes } from 'react-icons/fa';
+import { FaRocket, FaChartLine, FaUsers, FaCogs, FaGithub, FaGoogle, FaLinkedin, FaFacebook, FaStar, FaBolt, FaUserShield, FaBars, FaTimes, FaSun, FaMoon } from 'react-icons/fa';
 import './HomePage.css';
 import dashboardPreview from '../assets/dashboard-Preview.png';
 import loopioLogo from '../assets/Loopio_logo_.png';
 
+import { useTheme } from '../context/ThemeContext';
+
 const HomePage = () => {
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
@@ -31,22 +34,31 @@ const HomePage = () => {
                     <a href="#testimonials" className="hp-nav-link">Stories</a>
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                     <button className="hp-btn-login" onClick={() => navigate('/login')}>Login</button>
+                    <button className="theme-toggle" onClick={toggleTheme}>
+                        {theme === 'light' ? <FaMoon /> : <FaSun />}
+                    </button>
                     {/* Mobile Hamburger */}
                     <button className="hp-mobile-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                        {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+                        <FaBars />
                     </button>
                 </div>
-
-                {/* Mobile Menu Overlay */}
-                <div className={`hp-mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-                    <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
-                    <a href="#integrations" onClick={() => setIsMobileMenuOpen(false)}>Integrations</a>
-                    <a href="#testimonials" onClick={() => setIsMobileMenuOpen(false)}>Stories</a>
-                    <button className="hp-btn-login-mobile" onClick={() => navigate('/login')}>Login</button>
-                </div>
             </nav>
+
+            {/* Mobile Menu Overlay */}
+            <div className={`hp-mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+                <button className="hp-mobile-close" onClick={() => setIsMobileMenuOpen(false)}>
+                    <FaTimes />
+                </button>
+                <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
+                <a href="#integrations" onClick={() => setIsMobileMenuOpen(false)}>Integrations</a>
+                <a href="#testimonials" onClick={() => setIsMobileMenuOpen(false)}>Stories</a>
+                <button className="theme-toggle" onClick={toggleTheme} style={{ fontSize: '2rem' }}>
+                    {theme === 'light' ? <FaMoon /> : <FaSun />}
+                </button>
+                <button className="hp-btn-login-mobile" onClick={() => navigate('/login')}>Login</button>
+            </div>
 
             {/* Hero Section */}
             <header className="hp-hero">
@@ -61,10 +73,10 @@ const HomePage = () => {
                 <div className="hp-dashboard-preview">
                     <img src={dashboardPreview} alt="Dashboard Preview" />
                 </div>
-            </header>
+            </header >
 
             {/* Features Section */}
-            <section id="features" className="hp-features">
+            < section id="features" className="hp-features" >
                 <div className="hp-feature-card">
                     <div className="hp-feature-icon"><FaUsers /></div>
                     <h3 className="hp-feature-title">Collect Feedback</h3>
@@ -95,10 +107,10 @@ const HomePage = () => {
                     <h3 className="hp-feature-title">Multi-Role Access</h3>
                     <p className="hp-feature-desc">Separate dashboards for Admin, Developer, and User with secure access control.</p>
                 </div>
-            </section>
+            </section >
 
             {/* Integrations Section */}
-            <section id="integrations" className="hp-integrations">
+            < section id="integrations" className="hp-integrations" >
                 <h2 className="hp-section-title">Works with your favorite tools</h2>
                 <div className="hp-logos-grid">
                     <div className="hp-logo-item" style={{ color: '#EA4335' }}><FaGoogle style={{ marginRight: '10px' }} /> Google</div>
@@ -106,10 +118,10 @@ const HomePage = () => {
                     <div className="hp-logo-item" style={{ color: '#FF6B35' }}><FaLinkedin style={{ marginRight: '10px' }} /> LinkedIn</div>
                     <div className="hp-logo-item" style={{ color: '#00FF88' }}><FaFacebook style={{ marginRight: '10px' }} /> Meta</div>
                 </div>
-            </section>
+            </section >
 
             {/* Testimonials / Stats */}
-            <section id="testimonials" className="hp-features" style={{ paddingBottom: '150px' }}>
+            < section id="testimonials" className="hp-features" style={{ paddingBottom: '150px' }}>
                 <div className="hp-feature-card" style={{ textAlign: 'center' }}>
                     <div style={{ color: '#FFD700', fontSize: '20px', marginBottom: '10px' }}>★★★★★</div>
                     <p className="hp-feature-desc" style={{ fontStyle: 'italic', fontSize: '18px' }}>"This platform revolutionized how we handle user requests. Absolutely essential."</p>
@@ -123,10 +135,10 @@ const HomePage = () => {
                     <h3 className="hp-feature-title" style={{ fontSize: '36px', color: '#0075FF' }}>99%</h3>
                     <p className="hp-feature-desc">Customer satisfaction</p>
                 </div>
-            </section>
+            </section >
 
             {/* Footer */}
-            <footer className="hp-footer">
+            < footer className="hp-footer" >
                 <div className="hp-logo" style={{ fontSize: '20px', display: 'flex', alignItems: 'center' }}>
                     <img src={loopioLogo} alt="Loopio" style={{ height: '30px', marginRight: '10px' }} />
                     Loopio
@@ -136,8 +148,8 @@ const HomePage = () => {
                     <a href="#" className="hp-nav-link" style={{ fontSize: '12px' }}>Privacy</a>
                     <a href="#" className="hp-nav-link" style={{ fontSize: '12px' }}>Terms</a>
                 </div>
-            </footer>
-        </div>
+            </footer >
+        </div >
     );
 };
 

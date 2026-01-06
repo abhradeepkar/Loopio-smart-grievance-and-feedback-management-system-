@@ -2,7 +2,6 @@ const Feedback = require('../models/Feedback');
 const mongoose = require('mongoose');
 const User = require('../models/User'); // Import User model
 const { createNotification } = require('./notificationController');
-const path = require('path');
 
 // Helper to transform feedback for response
 // Helper to transform feedback for response

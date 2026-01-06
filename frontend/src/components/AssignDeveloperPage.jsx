@@ -48,8 +48,8 @@ const AssignDeveloperPage = () => {
         await assignDeveloper(feedbackId, devId);
 
         // Show toast
-        const devName = developers.find(d => d._id === devId)?.name || 'Developer';
-        setToast({ message: `Feedback assigned successfully to ${devName}!`, type: 'success' });
+        // const devName = developers.find(d => d._id === devId)?.name || 'Developer';
+        // setToast({ message: `Feedback assigned successfully to ${devName}!`, type: 'success' }); // Removed to avoid duplicate
 
         // Reset selection
         setSelectedFeedbackMap(prev => ({ ...prev, [devId]: '' }));

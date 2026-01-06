@@ -4,19 +4,22 @@ import { useAuth } from './AuthProvider';
 import { useTheme } from '../context/ThemeContext';
 
 import FeedbackDetail from './FeedbackDetail';
+import Popup from './Popup';
 import DeveloperProductivityChart from './DeveloperProductivityChart';
 import FilterBar from './FilterBar';
 import {
     FaList, FaCheckCircle, FaExclamationTriangle,
-    FaRocket, FaClock
+    FaRocket, FaClock, FaTimesCircle, FaTrash
 } from 'react-icons/fa';
 import './DeveloperDashboard.css';
 
 const DeveloperDashboard = () => {
-    const { feedbacks, updateFeedbackStatus, assignDeveloper, searchQuery } = useFeedback();
+    const { feedbacks, updateFeedbackStatus, assignDeveloper, deleteFeedback, searchQuery } = useFeedback();
     const { user } = useAuth();
     const { theme } = useTheme();
     const [selectedFeedback, setSelectedFeedback] = useState(null);
+    const [showDeclinePopup, setShowDeclinePopup] = useState(false);
+    const [taskToDecline, setTaskToDecline] = useState(null);
 
     // Filter feedbacks assigned to this developer
     const myTasks = feedbacks.filter(fb =>
@@ -25,7 +28,7 @@ const DeveloperDashboard = () => {
             fb.status.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const pendingTasks = myTasks.filter(t => t.status === 'Pending');
+    const pendingTasks = myTasks.filter(t => ['Submitted', 'Open', 'Pending'].includes(t.status));
     const activeTasks = myTasks.filter(t => ['In Progress', 'Working'].includes(t.status));
     const completedTasks = myTasks.filter(t => ['Resolved', 'Closed'].includes(t.status));
 
@@ -36,10 +39,23 @@ const DeveloperDashboard = () => {
         updateFeedbackStatus(id, 'In Progress');
     };
 
-    const handleReject = (id) => {
-        if (window.confirm('Reject this assignment?')) {
-            assignDeveloper(id, null); // Unassign
-            updateFeedbackStatus(id, 'Open');
+    const handleDecline = (id) => {
+        setTaskToDecline(id);
+        setShowDeclinePopup(true);
+    };
+
+    const confirmDecline = () => {
+        if (taskToDecline) {
+            assignDeveloper(taskToDecline, null); // Unassign
+            updateFeedbackStatus(taskToDecline, 'Declined');
+            setShowDeclinePopup(false);
+            setTaskToDecline(null);
+        }
+    };
+
+    const handleRemove = (id) => {
+        if (window.confirm('Are you sure you want to REMOVE (Delete) this task permanently?')) {
+            deleteFeedback(id);
         }
     };
 
@@ -114,26 +130,24 @@ const DeveloperDashboard = () => {
                 <div className="vision-card activity-card">
                     <h3>Activity Summary</h3>
                     <div className="activity-list">
-                        {completedTasks.slice(0, 3).map((task, i) => (
-                            <div key={i} className="activity-item">
-                                <div className="activity-icon-small icon-success">
-                                    <FaCheckCircle />
-                                </div>
-                                <div className="activity-text">
-                                    <p className="activity-title">Fixed {task.title}</p>
-                                    <p className="activity-time">Just now</p>
-                                </div>
-                            </div>
-                        ))}
-                        <div className="activity-item">
-                            <div className="activity-icon-small icon-info">
-                                <FaRocket />
-                            </div>
-                            <div className="activity-text">
-                                <p className="activity-title">New assignment</p>
-                                <p className="activity-time">2 hours ago</p>
-                            </div>
-                        </div>
+                        {completedTasks.length > 0 ? (
+                            completedTasks
+                                .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                                .slice(0, 4)
+                                .map((task, i) => (
+                                    <div key={task._id} className="activity-item">
+                                        <div className="activity-icon-small icon-success">
+                                            <FaCheckCircle />
+                                        </div>
+                                        <div className="activity-text">
+                                            <p className="activity-title">Resolved {task.title}</p>
+                                            <p className="activity-time">{new Date(task.updatedAt).toLocaleDateString()} at {new Date(task.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                        </div>
+                                    </div>
+                                ))
+                        ) : (
+                            <p className="sub-text" style={{ padding: '10px' }}>No recent activity.</p>
+                        )}
                     </div>
                 </div>
             </section>
@@ -190,20 +204,28 @@ const DeveloperDashboard = () => {
                                                 {fb.status === 'Pending' ? (
                                                     <div className="action-buttons">
                                                         <button className="btn-text success-text" onClick={() => handleAccept(fb._id)}>ACCEPT</button>
-                                                        <button className="btn-text danger-text" onClick={() => handleReject(fb._id)}>REJECT</button>
+                                                        <button className="btn-text danger-text" onClick={() => handleDecline(fb._id)}>DECLINE</button>
                                                     </div>
                                                 ) : (
                                                     <div className="status-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                         <select
                                                             value={fb.status}
-                                                            onChange={(e) => handleStatusChange(fb._id, e.target.value)}
+                                                            onChange={(e) => {
+                                                                if (e.target.value === 'Decline') {
+                                                                    handleDecline(fb._id);
+                                                                } else {
+                                                                    handleStatusChange(fb._id, e.target.value);
+                                                                }
+                                                            }}
                                                             className="status-select"
                                                             disabled={fb.status === 'Closed'}
                                                             style={{ flex: 1, minWidth: '120px' }}
                                                         >
+                                                            <option value="Pending">Pending (Pause)</option>
                                                             <option value="In Progress">In Progress</option>
                                                             <option value="Working">Working</option>
                                                             <option value="Resolved">Resolved</option>
+                                                            <option value="Decline">Decline (Unassign)</option>
                                                         </select>
 
                                                         {/* ETA Date Picker */}
@@ -226,6 +248,15 @@ const DeveloperDashboard = () => {
                                                                 colorScheme: theme === 'light' ? 'light' : 'dark'
                                                             }}
                                                         />
+                                                        {/* Remove Button */}
+                                                        <button
+                                                            className="btn-text danger-text"
+                                                            onClick={() => handleRemove(fb._id)}
+                                                            title="Remove Task"
+                                                            style={{ marginLeft: '10px' }}
+                                                        >
+                                                            <FaTrash />
+                                                        </button>
                                                     </div>
                                                 )}
                                             </td>
@@ -236,7 +267,7 @@ const DeveloperDashboard = () => {
                         </div>
                     )}
                 </div>
-            </section>
+            </section >
 
             {selectedFeedback && (
                 <FeedbackDetail
@@ -244,7 +275,18 @@ const DeveloperDashboard = () => {
                     onClose={() => setSelectedFeedback(null)}
                 />
             )}
-        </div>
+
+            <Popup
+                isOpen={showDeclinePopup}
+                onClose={() => setShowDeclinePopup(false)}
+                title="Decline Assignment"
+                message="Are you sure you want to DECLINE this task? It will be unassigned from you and returned to the Open pool."
+                type="danger"
+                onConfirm={confirmDecline}
+                confirmText="Decline"
+                cancelText="Cancel"
+            />
+        </div >
     );
 };
 

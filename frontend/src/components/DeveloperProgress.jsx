@@ -110,9 +110,24 @@ const DeveloperProgress = () => {
                     <p className="sub-text">Distribution of your assigned tasks</p>
 
                     <div className="metrics-list" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {['Bug', 'Feature Request', 'Improvement', 'Other'].map(cat => {
+                        {['Software Issue', 'Feature Request', 'HR Issue', 'Project Issue', 'Workplace Issue', 'Other'].map(cat => {
                             const count = myTasks.filter(t => t.category === cat).length;
                             const percentage = totalAssigned > 0 ? (count / totalAssigned) * 100 : 0;
+
+                            // Hide categories with 0 count to keep it clean? Or show all?
+                            // User asked "why 0%", so showing 0 is fine, but maybe let's show all to be explicit.
+                            // Actually, let's keep showing all so they know what IS tracked.
+
+                            let color = '#FFB75E'; // Default
+                            if (cat.includes('Issue') || cat === 'Software Issue') color = '#FF5C5C'; // Issues red-ish
+                            if (cat === 'Feature Request') color = '#FFC107'; // Yellow for features
+                            if (cat === 'HR Issue') color = '#9C27B0'; // Purple distinct color
+                            if (cat === 'Project Issue') color = '#01B574'; // Green distinct color
+                            if (cat === 'Workplace Issue') color = '#E91E63'; // Pink distinct color
+
+                            if (percentage === 0 && totalAssigned > 0) {
+                                // Optional: You could hide 0% items, but let's leave them for now as per user request context
+                            }
 
                             return (
                                 <div key={cat} className="metric-item">
@@ -124,7 +139,7 @@ const DeveloperProgress = () => {
                                         <div style={{
                                             height: '100%',
                                             width: `${percentage}%`,
-                                            background: cat === 'Bug' ? '#FF5C5C' : cat === 'Feature Request' ? '#00D2FF' : '#FFB75E',
+                                            background: color,
                                             borderRadius: '3px',
                                             transition: 'width 1s ease'
                                         }}></div>

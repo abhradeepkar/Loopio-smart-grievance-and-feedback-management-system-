@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { useFeedback } from '../context/FeedbackContext';
 import { useAuth } from './AuthProvider';
 import FeedbackDetail from './FeedbackDetail';
+import Popup from './Popup';
 import FilterBar from './FilterBar';
 import {
     FaList, FaExclamationTriangle, FaRocket, FaCheckCircle,
-    FaCalendarAlt, FaPlay, FaEye, FaCheck, FaBolt
+    FaCalendarAlt, FaPlay, FaEye, FaCheck, FaBolt, FaTimesCircle, FaTrash
 } from 'react-icons/fa';
 
 const DeveloperAssignedTasks = () => {
-    const { feedbacks, updateFeedbackStatus, filters, searchQuery } = useFeedback();
+    const { feedbacks, updateFeedbackStatus, assignDeveloper, deleteFeedback, filters, searchQuery } = useFeedback();
     const { user } = useAuth();
     const [selectedFeedback, setSelectedFeedback] = useState(null);
+    const [showDeclinePopup, setShowDeclinePopup] = useState(false);
+    const [taskToDecline, setTaskToDecline] = useState(null);
     const [deadlineSort, setDeadlineSort] = useState('asc'); // 'asc' or 'desc'
 
     // 1. Filter by User Assignment
@@ -54,6 +57,30 @@ const DeveloperAssignedTasks = () => {
             updateFeedbackStatus(id, 'Resolved');
         }
     };
+
+    const handleDecline = (e, id) => {
+        e.stopPropagation();
+        setTaskToDecline(id);
+        setShowDeclinePopup(true);
+    };
+
+    const confirmDecline = () => {
+        if (taskToDecline) {
+            assignDeveloper(taskToDecline, null); // Unassign
+            updateFeedbackStatus(taskToDecline, 'Declined'); // Set status to Declined
+            setShowDeclinePopup(false);
+            setTaskToDecline(null);
+        }
+    };
+
+    const handleRemove = (e, id) => {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to REMOVE (Delete) this task permanently?')) {
+            deleteFeedback(id);
+        }
+    };
+
+
 
     return (
         <div className="dashboard-content">
@@ -133,7 +160,7 @@ const DeveloperAssignedTasks = () => {
                                         <tr key={fb._id} onClick={() => setSelectedFeedback(fb)} className="clickable-row">
                                             {/* Column 1: Task Title & Priority */}
                                             <td>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                     <span className="title-text" style={{ fontSize: '14px' }}>{fb.title}</span>
                                                     <span style={{ fontSize: '11px', color: 'var(--vision-text-muted)' }}>ID: #{fb._id.slice(-6)}</span>
                                                     <span className={`priority-badge ${fb.priority.toLowerCase()}`} style={{ width: 'fit-content' }}>
@@ -151,7 +178,7 @@ const DeveloperAssignedTasks = () => {
 
                                             {/* Column 3: Dates */}
                                             <td>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <span style={{ color: 'var(--vision-text-muted)' }}>Assigned:</span>
                                                         <span>{new Date(fb.createdAt).toLocaleDateString()}</span>
@@ -167,8 +194,9 @@ const DeveloperAssignedTasks = () => {
 
                                             {/* Column 4: Quick Actions */}
                                             <td onClick={e => e.stopPropagation()}>
-                                                <div className="action-buttons" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                                    {fb.status === 'Pending' && (
+                                                <div className="action-buttons" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                                    {/* ACTIONS logic: Allow start/decline for any task that hasn't been started yet */}
+                                                    {['Submitted', 'Open', 'Pending'].includes(fb.status) && (
                                                         <button
                                                             className="btn-text success-text"
                                                             onClick={(e) => handleStartWork(e, fb._id)}
@@ -178,15 +206,47 @@ const DeveloperAssignedTasks = () => {
                                                             <FaPlay style={{ marginRight: '5px' }} /> Start
                                                         </button>
                                                     )}
-                                                    {['In Progress', 'Working'].includes(fb.status) && (
+                                                    {['Submitted', 'Open', 'Pending'].includes(fb.status) && (
                                                         <button
-                                                            className="btn-text success-text"
-                                                            onClick={(e) => handleMarkResolved(e, fb._id)}
-                                                            title="Mark as Resolved"
-                                                            style={{ background: 'rgba(1, 181, 116, 0.1)', padding: '6px 12px', borderRadius: '8px' }}
+                                                            className="btn-text danger-text"
+                                                            onClick={(e) => handleDecline(e, fb._id)}
+                                                            title="Decline Assignment"
+                                                            style={{ background: 'rgba(227, 26, 26, 0.1)', padding: '6px 12px', borderRadius: '8px' }}
                                                         >
-                                                            <FaCheck style={{ marginRight: '5px' }} /> Resolve
+                                                            <FaTimesCircle style={{ marginRight: '5px' }} /> Decline
                                                         </button>
+                                                    )}
+                                                    {['In Progress', 'Working', 'Resolved'].includes(fb.status) && (
+                                                        <select
+                                                            className="status-select-small"
+                                                            value={fb.status}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                if (e.target.value === 'Decline') {
+                                                                    handleDecline(e, fb._id);
+                                                                } else {
+                                                                    updateFeedbackStatus(fb._id, e.target.value);
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                padding: '6px 20px 6px 10px',
+                                                                borderRadius: '8px',
+                                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                color: 'var(--vision-text-main)',
+                                                                fontSize: '12px',
+                                                                outline: 'none',
+                                                                cursor: 'pointer',
+                                                                marginRight: '16px'
+                                                            }}
+                                                        >
+                                                            <option value="Pending" style={{ color: 'black' }}>Pending (Pause)</option>
+                                                            <option value="In Progress" style={{ color: 'black' }}>In Progress</option>
+                                                            <option value="Working" style={{ color: 'black' }}>Working</option>
+                                                            <option value="Resolved" style={{ color: 'black' }}>Resolved</option>
+                                                            <option value="Decline" style={{ color: 'red' }}>Decline (Unassign)</option>
+                                                        </select>
                                                     )}
                                                     <button
                                                         className="btn-text"
@@ -195,6 +255,14 @@ const DeveloperAssignedTasks = () => {
                                                         style={{ color: 'var(--vision-text-main)', background: 'rgba(255, 255, 255, 0.05)', padding: '6px 12px', borderRadius: '8px' }}
                                                     >
                                                         <FaEye />
+                                                    </button>
+                                                    <button
+                                                        className="btn-text danger-text"
+                                                        onClick={(e) => handleRemove(e, fb._id)}
+                                                        title="Remove Task"
+                                                        style={{ background: 'rgba(227, 26, 26, 0.1)', padding: '6px 12px', borderRadius: '8px' }}
+                                                    >
+                                                        <FaTrash />
                                                     </button>
                                                 </div>
                                             </td>
@@ -213,6 +281,17 @@ const DeveloperAssignedTasks = () => {
                     onClose={() => setSelectedFeedback(null)}
                 />
             )}
+
+            <Popup
+                isOpen={showDeclinePopup}
+                onClose={() => setShowDeclinePopup(false)}
+                title="Decline Assignment"
+                message="Are you sure you want to DECLINE this task? Admin will be notified to re-assign it."
+                type="danger"
+                onConfirm={confirmDecline}
+                confirmText="Decline"
+                cancelText="Cancel"
+            />
         </div>
     );
 };

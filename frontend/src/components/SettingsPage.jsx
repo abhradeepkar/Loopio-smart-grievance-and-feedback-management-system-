@@ -103,18 +103,23 @@ const SettingsPage = () => {
 
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            showToast('New passwords do not match', 'error');
+
+        // 1. Validation: Min 6 characters
+        // 1. Validation: Min 6 characters
+        if (passwordData.newPassword.length < 6) {
+            showToast('Password must be at least 6 characters', 'error');
             return;
         }
+
+        // 2. Validation: Mismatch
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            showToast('Password is not matching', 'error');
+            return;
+        }
+
         if (!passwordData.newPassword) return;
 
         setLoading(true);
-        // We reuse the updateProfile endpoint or a specific changePassword endpoint if available
-        // AuthProvider's updateProfile might not handle password verification correctly if it expects specific fields
-        // Checking backend authController: updateUserProfile DOES NOT handle password change logic securely (it's commented out)
-        // We really should use the /api/users/password endpoint.
-        // Let's implement a direct fetch here to be safe and correct.
 
         try {
             const token = localStorage.getItem('token');
@@ -132,10 +137,15 @@ const SettingsPage = () => {
 
             const data = await res.json();
             if (res.ok) {
-                showToast('Password changed successfully', 'success');
+                showToast('Password updated successfully', 'success');
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
             } else {
-                showToast(data.message || 'Failed to change password', 'error');
+                // 3. Error Handling: Specific message for wrong password
+                if (res.status === 401) {
+                    showToast('Wrong Password', 'error');
+                } else {
+                    showToast(data.message || 'Failed to change password', 'error');
+                }
             }
         } catch (error) {
             showToast('Network error changing password', 'error');

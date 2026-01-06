@@ -284,7 +284,7 @@ export const FeedbackProvider = ({ children }) => {
                     if (prev.some(n => n._id === notification._id)) return prev;
                     return [notification, ...prev];
                 });
-                showToast(notification.message, 'info');
+                showToast(notification.message, notification.type || 'info');
             }
         });
 
@@ -364,7 +364,7 @@ export const FeedbackProvider = ({ children }) => {
 
             if (res.ok) {
                 const newFeedback = await res.json();
-                showToast('Feedback submitted successfully!', 'success');
+                // showToast('Feedback submitted successfully!', 'success'); // Removed to avoid duplicate with socket notification
                 return { success: true };
             }
             const errData = await res.json();
@@ -415,7 +415,7 @@ export const FeedbackProvider = ({ children }) => {
             if (res.ok) {
                 const updatedFeedback = await res.json();
                 setFeedbacks(prev => prev.map(fb => fb._id === feedbackId ? updatedFeedback : fb));
-                showToast('Developer assigned successfully', 'success');
+                // showToast('Developer assigned successfully', 'success'); // Removed to avoid duplicate with socket notification
             } else {
                 showToast('Failed to assign developer', 'error');
             }

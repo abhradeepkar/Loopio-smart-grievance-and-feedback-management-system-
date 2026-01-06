@@ -34,8 +34,12 @@ const AllFeedbacksPage = () => {
                     >
                         <option value="All" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>All Status</option>
                         <option value="Submitted" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Submitted</option>
+                        <option value="Open" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Open</option>
+                        <option value="Pending" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Pending</option>
                         <option value="In Progress" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>In Progress</option>
+                        <option value="Working" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Working</option>
                         <option value="Resolved" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Resolved</option>
+                        <option value="Closed" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Closed</option>
                     </select>
                 </div>
             </div>

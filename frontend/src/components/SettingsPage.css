@@ -18,16 +18,11 @@
 
 .settings-header h2 {
     font-size: 32px;
-    /* Use a valid gradient or solid color */
-    background: linear-gradient(135deg, #ffffff 0%, #00C2FF 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
     margin-bottom: 8px;
     font-weight: 700;
     letter-spacing: -0.5px;
-    /* Fallback if gradient fails */
-    color: white;
+    color: var(--vision-text-primary);
+    /* Adapts to theme (White/Black) */
 }
 
 .settings-subtitle {

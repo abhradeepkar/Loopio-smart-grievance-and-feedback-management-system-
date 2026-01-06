@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes } from 'react-icons/fa';
+import './ToastContext.css';
 
 const ToastContext = createContext();
 
@@ -24,66 +25,53 @@ export const ToastProvider = ({ children }) => {
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            <div className="toast-container">
+            <div style={{
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                zIndex: 999999,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                pointerEvents: 'none',
+                maxWidth: 'calc(100vw - 40px)',
+                width: 'auto'
+            }}>
                 {toasts.map(toast => (
-                    <div key={toast.id} className={`toast-notification toast-${toast.type} slide-in`}>
-                        <div className="toast-icon">
+                    <div
+                        key={toast.id}
+                        style={{
+                            minWidth: 'min(300px, 100%)',
+                            width: 'fit-content',
+                            padding: '12px 16px',
+                            borderRadius: '8px',
+                            background: toast.type === 'success' ? '#E6F8F0' : toast.type === 'error' ? '#FFEAEA' : '#E6FAFF',
+                            borderLeft: `4px solid ${toast.type === 'success' ? '#01B574' : toast.type === 'error' ? '#FF5C5C' : '#00D2FF'}`,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            pointerEvents: 'auto',
+                            color: toast.type === 'success' ? '#006D44' : toast.type === 'error' ? '#D32F2F' : '#0088A5',
+                            wordBreak: 'break-word'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px' }}>
                             {toast.type === 'success' && <FaCheckCircle />}
                             {toast.type === 'error' && <FaExclamationCircle />}
                             {toast.type === 'info' && <FaInfoCircle />}
                         </div>
-                        <span className="toast-message">{toast.message}</span>
-                        <button className="toast-close" onClick={() => removeToast(toast.id)}>
+                        <span style={{ flex: 1, fontSize: '14px', fontWeight: '500' }}>{toast.message}</span>
+                        <button
+                            onClick={() => removeToast(toast.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.6 }}
+                        >
                             <FaTimes />
                         </button>
                     </div>
                 ))}
             </div>
-            <style jsx>{`
-                .toast-container {
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 9999;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                }
-                .toast-notification {
-                    min-width: 300px;
-                    padding: 12px 16px;
-                    border-radius: 8px;
-                    background: white;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    animation: slideIn 0.3s ease;
-                    border-left: 4px solid #ccc;
-                }
-                .toast-success { border-left-color: #01B574; background: #E6F8F0; color: #006D44; }
-                .toast-error { border-left-color: #FF5C5C; background: #FFEAEA; color: #D32F2F; }
-                .toast-info { border-left-color: #00D2FF; background: #E6FAFF; color: #0088A5; }
 
-                .toast-message {
-                    flex: 1;
-                    font-size: 14px;
-                    font-weight: 500;
-                }
-                .toast-close {
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    color: inherit;
-                    opacity: 0.6;
-                }
-                .toast-close:hover { opacity: 1; }
-                
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `}</style>
         </ToastContext.Provider>
     );
 };

@@ -126,9 +126,16 @@
     font-weight: 800;
 }
 
+
 .bar-label.closed {
     color: #E53E3E;
     /* Red - visible on both */
+    font-weight: 800;
+}
+
+.bar-label.declined {
+    color: #C53030;
+    /* Darker Red for Declined */
     font-weight: 800;
 }
 
@@ -151,6 +158,10 @@
 
 .bar.closed {
     background: linear-gradient(to top, #E31A1A, #ff5757);
+}
+
+.bar.declined {
+    background: linear-gradient(to top, #C53030, #FC8181);
 }
 
 /* Category List */
@@ -237,18 +248,55 @@
 /* Responsive Scroll for Mobile */
 @media (max-width: 768px) {
     .analytics-charts {
-        /* Reset previous container scroll */
-        overflow-x: visible;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        /* Ensure full width */
+        overflow: hidden;
+        /* Prevent parent spill */
     }
 
+    /* Apply scroll to ANY chart container (Graph or future) */
     .chart-container {
+        width: 100%;
+        display: block;
         overflow-x: auto;
-        padding-bottom: 10px;
+        /* Enable scroll */
         -webkit-overflow-scrolling: touch;
+        padding-bottom: 20px;
+        /* Space for scrollbar */
     }
 
+    /* Force the Bar Chart to be wide, triggering the scroll */
     .bar-chart {
-        min-width: 500px;
-        /* Force chart to be wide enough to scroll */
+        min-width: 1400px;
+        /* Adjusted width for 500px padding */
+        padding-right: 20px;
+        padding-left: 500px;
+        /* Reverted padding to 500px as requested */
+    }
+
+    /* Ensure categories stack nicely without forcing width */
+    .category-list {
+        width: 100%;
+        min-width: auto;
+        /* Let it shrink/grow */
+    }
+
+    /* Custom Scrollbar Styles for Mobile */
+    .chart-container::-webkit-scrollbar {
+        height: 8px;
+        display: block;
+    }
+
+    .chart-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    .chart-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
     }
 }

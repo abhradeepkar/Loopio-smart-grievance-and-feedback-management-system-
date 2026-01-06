@@ -75,9 +75,9 @@ const AdminDashboard = () => {
                 <div className="vision-card graph-card">
                     <div className="card-header">
                         <h3>Analytics Overview</h3>
-                        <p>System-wide feedback trends</p>
+                        <p style={{ marginLeft: '20px' }}>System-wide feedback trends</p>
                     </div>
-                    <div className="chart-container" style={{ width: '100%', height: '300px' }}>
+                    <div className="chart-container" style={{ width: '100%', height: 'auto' }}>
                         <AdminAnalyticsChart />
                     </div>
                 </div>

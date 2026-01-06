@@ -29,10 +29,20 @@ const FeedbackForm = ({ onClose, initialData = null }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Create a clean payload with only editable fields
+        const payload = {
+            title: formData.title,
+            category: formData.category,
+            priority: formData.priority,
+            description: formData.description,
+            file: formData.file
+        };
+
         if (initialData) {
-            await editFeedback(initialData._id, formData);
+            await editFeedback(initialData._id, payload);
         } else {
-            await addFeedback(formData);
+            await addFeedback(payload);
         }
         onClose();
     };
@@ -62,6 +72,7 @@ const FeedbackForm = ({ onClose, initialData = null }) => {
                             <label>Category</label>
                             <select name="category" value={formData.category} onChange={handleChange}>
                                 <option>Software Issue</option>
+                                <option>Feature Request</option>
                                 <option>HR Issue</option>
                                 <option>Project Issue</option>
                                 <option>Workplace Issue</option>

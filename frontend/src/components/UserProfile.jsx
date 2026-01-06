@@ -11,12 +11,11 @@ const UserProfile = ({ onClose }) => {
         name: user.name,
         email: user.email,
         phone: user.phone || '',
-        address: user.address || '',
-        password: ''
+        address: user.address || ''
     });
     const [message, setMessage] = useState('');
 
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
 
     const [selectedFile, setSelectedFile] = useState(null);
     const [removePhoto, setRemovePhoto] = useState(false);
@@ -44,9 +43,7 @@ const UserProfile = ({ onClose }) => {
         data.append('email', formData.email);
         data.append('phone', formData.phone);
         data.append('address', formData.address);
-        if (formData.password) {
-            data.append('password', formData.password);
-        }
+
         if (selectedFile) {
             data.append('profilePicture', selectedFile);
         }
@@ -68,19 +65,7 @@ const UserProfile = ({ onClose }) => {
         }
     };
 
-    const handleDeleteClick = () => {
-        setShowDeleteConfirm(true);
-    };
 
-    const handleConfirmDelete = async () => {
-        const res = await deleteAccount();
-        if (res.success) {
-            onClose();
-        } else {
-            setMessage(res.message || 'Failed to delete account');
-            setShowDeleteConfirm(false);
-        }
-    };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -180,17 +165,7 @@ const UserProfile = ({ onClose }) => {
                                         placeholder="Dhaka, Bangladesh"
                                     />
                                 </div>
-                                <div className="detail-group">
-                                    <label>New Password (leave blank to keep current)</label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        className="edit-input"
-                                        placeholder="********"
-                                    />
-                                </div>
+
                             </>
                         ) : (
                             <>
@@ -231,23 +206,14 @@ const UserProfile = ({ onClose }) => {
                         </>
                     ) : (
                         <>
-                            <button className="delete-btn" onClick={handleDeleteClick}>Delete Account</button>
+
                             <button className="secondary-btn" onClick={onClose}>Close</button>
                             <button className="primary-btn" onClick={() => setIsEditing(true)}>Edit Profile</button>
                         </>
                     )}
                 </div>
 
-                <Popup
-                    isOpen={showDeleteConfirm}
-                    onClose={() => setShowDeleteConfirm(false)}
-                    title="Delete Account?"
-                    message="Are you sure you want to permanently delete your account? This action cannot be undone."
-                    type="danger"
-                    confirmText="Yes, Delete"
-                    cancelText="Cancel"
-                    onConfirm={handleConfirmDelete}
-                />
+
             </div >
         </div >
     );

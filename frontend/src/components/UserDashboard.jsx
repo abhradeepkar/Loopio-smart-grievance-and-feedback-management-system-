@@ -5,6 +5,7 @@ import FeedbackForm from './FeedbackForm';
 import FeedbackDetail from './FeedbackDetail';
 import UserAnalyticsChart from './UserAnalyticsChart';
 import FilterBar from './FilterBar';
+import Popup from './Popup';
 import {
     FaPlus, FaFileAlt, FaRocket, FaCheckCircle, FaClock, FaTrash
 } from 'react-icons/fa';
@@ -15,6 +16,8 @@ const UserDashboard = () => {
     const { user } = useAuth();
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedFeedback, setSelectedFeedback] = useState(null);
+    const [showDeletePopup, setShowDeletePopup] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState(null);
 
     const myFeedbacks = feedbacks.filter(fb =>
         fb.submittedBy && fb.submittedBy._id === user._id &&
@@ -173,7 +176,7 @@ const UserDashboard = () => {
                                             <span style={{ fontSize: '10px', color: '#fff' }}>{fb.status}</span>
                                         </td>
                                         <td onClick={e => e.stopPropagation()}>
-                                            {fb.status === 'Submitted' || fb.status === 'Open' ? (
+                                            {fb.status === 'Submitted' || fb.status === 'Open' || fb.status === 'In Progress' || fb.status === 'Working' ? (
                                                 <button className="btn-text" style={{ fontSize: '10px', color: '#00D2FF' }} onClick={(e) => {
                                                     e.stopPropagation();
                                                     setSelectedFeedback(fb);
@@ -187,9 +190,8 @@ const UserDashboard = () => {
                                             ) : null}
                                             <button className="btn-text" style={{ fontSize: '12px', color: '#E31A1A', marginLeft: '25px' }} onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (window.confirm('Are you sure you want to delete this feedback?')) {
-                                                    deleteFeedback(fb._id);
-                                                }
+                                                setTaskToDelete(fb._id);
+                                                setShowDeletePopup(true);
                                             }}><FaTrash /></button>
                                         </td>
                                     </tr>
@@ -250,6 +252,21 @@ const UserDashboard = () => {
                     />
                 )
             }
+
+            <Popup
+                isOpen={showDeletePopup}
+                onClose={() => setShowDeletePopup(false)}
+                title="Delete Feedback"
+                message="Are you sure you want to delete this feedback? This action cannot be undone."
+                type="danger"
+                onConfirm={() => {
+                    if (taskToDelete) deleteFeedback(taskToDelete);
+                    setShowDeletePopup(false);
+                    setTaskToDelete(null);
+                }}
+                confirmText="Delete"
+                cancelText="Cancel"
+            />
         </div>
     );
 };

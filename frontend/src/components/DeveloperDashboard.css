@@ -203,8 +203,11 @@
     gap: var(--dev-gap);
     padding: clamp(16px, 2vw, 30px);
     overflow-x: hidden;
-    /* Prevent horizontal scroll */
+    /* CRITICAL: Prevent horizontal scroll on body/main */
     min-height: 100vh;
+    width: 100%;
+    /* Ensure it doesn't overflow */
+    box-sizing: border-box;
 }
 
 /* Dashboard Grid Container */
@@ -213,6 +216,8 @@
     flex-direction: column;
     gap: var(--dev-gap);
     width: 100%;
+    max-width: 100%;
+    /* Ensure it fits in vision-main */
 }
 
 /* --- Sections --- */
@@ -344,6 +349,24 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Fix for Select Dropdown Options Visibility */
+.status-select option,
+.status-select-small option {
+    background-color: #1e1e2f;
+    /* Dark background matching theme */
+    color: #ffffff;
+    /* White text */
+    padding: 10px;
+}
+
+/* Ensure the select itself has correct text color */
+.status-select,
+.status-select-small {
+    color: #ffffff;
+    background-color: transparent;
+    /* Or specific background */
+}
+
 .vision-table {
     width: 100%;
     border-collapse: separate;
@@ -360,7 +383,8 @@
 }
 
 .vision-table td {
-    padding: 16px 12px;
+    padding: 16px 20px;
+    /* Increased horizontal padding for better spacing */
     font-size: 13px;
     color: var(--vision-text-main);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -384,6 +408,11 @@
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
+}
+
+.priority-badge {
+    margin-left: 10px;
+    /* Added as per user request for spacing */
 }
 
 .priority-badge.high {
@@ -439,6 +468,8 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--vision-text-main);
     padding: 6px 10px;
+    margin-left: 10px;
+    /* Added spacing as requested */
     border-radius: 8px;
     outline: none;
     font-size: 12px;
@@ -654,22 +685,31 @@
     /* Allow table to scroll horizontally on mobile */
     .table-responsive {
         width: 100%;
+        max-width: 100%;
+        /* Ensure it respects parent width */
         margin-left: 0;
         margin-right: 0;
         border-radius: var(--dev-radius);
         overflow-x: auto;
+        /* Custom Scrollbar for better UX */
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+        /* Smooth scroll on iOS */
     }
 
-    /* Ensure table maintains min-width to trigger scroll */
+    /* Ensure table maintains min-width but DOES NOT scroll itself */
     .vision-table {
         min-width: 600px;
-        /* Ensures content isn't squashed */
+        overflow: visible;
+        /* Prevent table from creating its own scroll context */
+        display: table;
+        /* Ensure it behaves as a table */
     }
 
     .vision-card {
         padding: 15px;
-        overflow: hidden;
-        /* Contain the negative margins */
+        overflow: visible;
+        /* Ensure card doesn't clip/scroll, let table-responsive handle it */
     }
 }
 

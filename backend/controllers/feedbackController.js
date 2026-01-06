@@ -166,6 +166,12 @@ const updateFeedback = async (req, res) => {
             return res.status(404).json({ message: 'Feedback not found' });
         }
 
+        // Check Permissions
+        // Users can only update their own feedback
+        if (req.user.role === 'user' && feedback.submittedBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to update this feedback' });
+        }
+
         const oldStatus = feedback.status;
         const oldAssignedTo = feedback.assignedTo?.toString();
 
@@ -180,14 +186,16 @@ const updateFeedback = async (req, res) => {
         if (req.body.status && req.body.status !== oldStatus) {
             feedback.status = req.body.status;
 
-            // 1. Notify Submitter (User)
-            await createNotification(
-                feedback.submittedBy,
-                `Status updated: "${feedback.title}" is now ${feedback.status}`,
-                'info',
-                `/feedbacks/${feedback._id}`,
-                req.app.get('socketio')
-            );
+            // 1. Notify Submitter (User) - ONLY if not the one updating
+            if (feedback.submittedBy.toString() !== req.user.id) {
+                await createNotification(
+                    feedback.submittedBy,
+                    `Status updated: "${feedback.title}" is now ${feedback.status}`,
+                    'info',
+                    `/feedbacks/${feedback._id}`,
+                    req.app.get('socketio')
+                );
+            }
 
             // 2. Notify Admin (if updated by Developer)
             if (req.user.role === 'developer') {
@@ -213,47 +221,86 @@ const updateFeedback = async (req, res) => {
         }
 
         // Handle Assignment Update
-        if (req.body.assignedTo && req.body.assignedTo !== oldAssignedTo) {
-            feedback.assignedTo = req.body.assignedTo;
+        if (req.body.assignedTo !== undefined && req.body.assignedTo !== oldAssignedTo) {
+            feedback.assignedTo = req.body.assignedTo; // Can be null
 
-            // 1. Notify New Developer
-            await createNotification(
-                feedback.assignedTo,
-                `You have been assigned to feedback "${feedback.title}"`,
-                'alert',
-                `/feedbacks/${feedback._id}`,
-                req.app.get('socketio')
-            );
-
-            // 2. Notify Submitter (User)
-            await createNotification(
-                feedback.submittedBy,
-                `Developer assigned to your feedback "${feedback.title}"`,
-                'info',
-                `/feedbacks/${feedback._id}`,
-                req.app.get('socketio')
-            );
-
-            // 3. Notify Previous Developer (if applicable)
-            if (oldAssignedTo) {
+            if (feedback.assignedTo) {
+                // 1. Notify New Developer
                 await createNotification(
-                    oldAssignedTo,
-                    `You were unassigned from "${feedback.title}"`,
+                    feedback.assignedTo,
+                    `You have been assigned to feedback "${feedback.title}"`,
+                    'alert',
+                    `/feedbacks/${feedback._id}`,
+                    req.app.get('socketio')
+                );
+
+                // 2. Notify Submitter (User)
+                await createNotification(
+                    feedback.submittedBy,
+                    `Developer assigned to your feedback "${feedback.title}"`,
+                    'info',
+                    `/feedbacks/${feedback._id}`,
+                    req.app.get('socketio')
+                );
+
+                // 3. Notify Previous Developer (if applicable) - ONLY if not unassigning self
+                if (oldAssignedTo && oldAssignedTo !== req.user.id) {
+                    await createNotification(
+                        oldAssignedTo,
+                        `You were unassigned from "${feedback.title}"`,
+                        'warning',
+                        `/feedbacks/${feedback._id}`,
+                        req.app.get('socketio')
+                    );
+                }
+
+                // 4. Notify Admins (Confirmation with Dev Name)
+                const assignedDeveloper = await User.findById(feedback.assignedTo);
+                const devName = assignedDeveloper ? assignedDeveloper.name : 'Developer';
+
+                const admins = await User.find({ role: 'admin' });
+                await Promise.all(admins.map(admin => createNotification(
+                    admin._id,
+                    `Assigned "${feedback.title}" to ${devName}`,
+                    'info',
+                    `/feedbacks/${feedback._id}`,
+                    req.app.get('socketio')
+                )));
+            } else {
+                // CASE: UNASSIGNED / DECLINED
+                // 1. Notify Previous Developer (Confirmation)
+                if (oldAssignedTo) {
+                    await createNotification(
+                        oldAssignedTo,
+                        `You have unassigned yourself from "${feedback.title}"`,
+                        'info',
+                        `/feedbacks/${feedback._id}`,
+                        req.app.get('socketio')
+                    );
+
+                    // 2. Notify Admins (Action Required)
+                    const admins = await User.find({ role: 'admin' });
+                    // Get name of developer who declined if possible, effectively req.user.name since they triggered it
+                    const declinerName = req.user.name || 'Developer';
+
+                    await Promise.all(admins.map(admin => createNotification(
+                        admin._id,
+                        `⚠️ Task DECLINED: "${feedback.title}" by ${declinerName}`,
+                        'alert',
+                        `/feedbacks/${feedback._id}`,
+                        req.app.get('socketio')
+                    )));
+                }
+
+                // 3. Notify Submitter (User) - Optional, maybe just keep them in 'Open' loop
+                await createNotification(
+                    feedback.submittedBy,
+                    `Feedback "${feedback.title}" is back to Open status`,
                     'info',
                     `/feedbacks/${feedback._id}`,
                     req.app.get('socketio')
                 );
             }
-
-            // 4. Notify Admins (Confirmation)
-            const admins = await User.find({ role: 'admin' });
-            await Promise.all(admins.map(admin => createNotification(
-                admin._id,
-                `Feedback "${feedback.title}" assigned to developer`,
-                'info',
-                `/feedbacks/${feedback._id}`,
-                req.app.get('socketio')
-            )));
         }
 
         // Handle Priority Update (specifically to High)
@@ -383,8 +430,12 @@ const deleteFeedback = async (req, res) => {
             return res.status(404).json({ message: 'Feedback not found' });
         }
 
-        // Check if user is owner or admin
-        if (feedback.submittedBy.toString() !== req.user.id && req.user.role !== 'admin') {
+        // Check if user is owner, admin, or the assigned developer
+        const isOwner = feedback.submittedBy.toString() === req.user.id;
+        const isAdmin = req.user.role === 'admin';
+        const isAssignedDev = req.user.role === 'developer' && feedback.assignedTo && feedback.assignedTo.toString() === req.user.id;
+
+        if (!isOwner && !isAdmin && !isAssignedDev) {
             return res.status(401).json({ message: 'User not authorized to delete this feedback' });
         }
 

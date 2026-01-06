@@ -8,17 +8,36 @@ import {
 } from 'react-icons/fa';
 
 const DeveloperFeedbackToFix = () => {
-    const { feedbacks, updateFeedbackStatus } = useFeedback();
+    const { feedbacks, updateFeedbackStatus, updateFilter } = useFeedback();
     const { user } = useAuth();
     const [selectedFeedback, setSelectedFeedback] = useState(null);
 
-    // Filter Logic: "Feedback to Fix" implies In Progress/Working items assigned to me
-    // The prompt says "only feedback items that are currently in progress and require fixing"
-    const fixList = feedbacks.filter(fb =>
-        fb.assignedTo &&
-        fb.assignedTo._id === user._id &&
-        ['In Progress', 'Working'].includes(fb.status)
-    );
+    // Reset filters on mount to ensure we have all data
+    React.useEffect(() => {
+        updateFilter('status', '');
+        updateFilter('priority', '');
+        updateFilter('category', '');
+    }, []);
+
+    // Filter Logic: "Feedback to Fix" - User wants to see ALL assigned tasks here that are not completed
+    console.log('DEBUG: User:', user);
+    console.log('DEBUG: Feedbacks Total:', feedbacks.length);
+
+    const fixList = feedbacks.filter(fb => {
+        if (!fb.assignedTo) return false;
+
+        // Handle both populated object and raw ID string
+        const assignedId = fb.assignedTo._id || fb.assignedTo;
+        const currentUserId = user._id || user.id; // Handle potential id vs _id difference
+
+        const isAssigned = String(assignedId) === String(currentUserId);
+        // Include Submitted and Open as they are valid active states for assigned tasks
+        const isStatus = ['Submitted', 'Open', 'Pending', 'In Progress', 'Working'].includes(fb.status);
+
+        console.log(`DEBUG: [${fb.title}] AssignedTo: ${assignedId} vs User: ${currentUserId} -> Match? ${isAssigned}. Status: ${fb.status} -> Keep? ${isStatus}`);
+
+        return isAssigned && isStatus;
+    });
 
     // Summary Stats
     const totalToFix = fixList.length;
@@ -34,14 +53,13 @@ const DeveloperFeedbackToFix = () => {
     // Handlers
     const handleUpdateProgress = (e, id, currentStatus) => {
         e.stopPropagation();
-        // Toggle between In Progress -> Working -> Resolved (handled by Mark Fixed)
-        if (currentStatus === 'In Progress') {
+        // Toggle logic
+        if (['Submitted', 'Open', 'Pending'].includes(currentStatus)) {
+            updateFeedbackStatus(id, 'In Progress');
+        } else if (currentStatus === 'In Progress') {
             updateFeedbackStatus(id, 'Working');
         } else {
-            // Already working, maybe nothing or loop back? Let's just keep it simple or ask user.
-            // For now, toggle back to In Progress if needed or just keep Working.
-            // Requirement says "Update Progress".
-            // Let's assume it moves to next stage or just ensures it's "Working".
+            // Already working
             updateFeedbackStatus(id, 'Working');
         }
     };
@@ -56,8 +74,15 @@ const DeveloperFeedbackToFix = () => {
     // Progress Tracker Component
     const ProgressTracker = ({ status }) => {
         // Stages: Assigned -> In Progress -> Working -> Resolved
+        // Map Submitted/Open/Pending to "Assigned" visual state
         const stages = ['Assigned', 'In Progress', 'Working', 'Resolved'];
-        const currentIdx = stages.indexOf(status) === -1 ? 0 : stages.indexOf(status);
+
+        let normalizedStatus = status;
+        if (['Submitted', 'Open', 'Pending'].includes(status)) {
+            normalizedStatus = 'Assigned';
+        }
+
+        const currentIdx = stages.indexOf(normalizedStatus) === -1 ? 0 : stages.indexOf(normalizedStatus);
 
         return (
             <div className="progress-tracker">

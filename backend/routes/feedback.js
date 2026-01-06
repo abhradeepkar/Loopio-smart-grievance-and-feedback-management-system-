@@ -19,7 +19,7 @@ router.route('/')
     .post(protect, upload.single('file'), createFeedback);
 
 router.route('/:id')
-    .put(protect, authorize('admin', 'developer'), updateFeedback)
+    .put(protect, updateFeedback)
     .delete(protect, deleteFeedback);
 
 router.route('/:id/comments')

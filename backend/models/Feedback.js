@@ -34,7 +34,7 @@ const feedbackSchema = new mongoose.Schema({
     status: {
         type: String,
         required: true,
-        enum: ['Submitted', 'Pending', 'In Progress', 'Working', 'Resolved', 'Closed', 'Open'],
+        enum: ['Submitted', 'Pending', 'In Progress', 'Working', 'Resolved', 'Closed', 'Open', 'Declined'],
         default: 'Submitted'
     },
     submittedBy: {

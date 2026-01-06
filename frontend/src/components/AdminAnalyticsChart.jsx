@@ -9,13 +9,16 @@ const AdminAnalyticsChart = () => {
 
     // Calculate Status Distribution
     const statusCounts = safeFeedbacks.reduce((acc, fb) => {
-        const status = fb.status || 'Unknown';
+        let status = fb.status || 'Unknown';
+        if (status === 'Submitted') {
+            status = 'Pending';
+        }
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
 
     const total = safeFeedbacks.length;
-    const statuses = ['Submitted', 'Pending', 'In Progress', 'Resolved', 'Closed'];
+    const statuses = ['Open', 'Pending', 'In Progress', 'Resolved', 'Closed', 'Declined'];
 
     // Calculate Category Distribution
     const categoryCounts = safeFeedbacks.reduce((acc, fb) => {

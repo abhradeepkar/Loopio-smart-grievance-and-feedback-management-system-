@@ -3,30 +3,31 @@ import { useFeedback } from '../context/FeedbackContext';
 import './AdminAnalyticsChart.css';
 
 const AdminAnalyticsChart = () => {
-    const { feedbacks } = useFeedback();
+    const { analytics } = useFeedback();
 
-    const safeFeedbacks = Array.isArray(feedbacks) ? feedbacks : [];
+    const statusData = analytics?.status || {};
+    const categoryData = analytics?.category || {};
+    const total = analytics?.total || 0;
 
-    // Calculate Status Distribution
-    const statusCounts = safeFeedbacks.reduce((acc, fb) => {
-        let status = fb.status || 'Unknown';
-        if (status === 'Submitted') {
-            status = 'Pending';
-        }
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-    }, {});
+    console.log('AdminAnalyticsChart: Logic Update', { statusData, categoryData, total });
 
-    const total = safeFeedbacks.length;
+    // Calculate Status Distribution (Map DB statuses to Display statuses)
+    // DB Enums: ['Submitted', 'Pending', 'In Progress', 'Working', 'Resolved', 'Closed', 'Open', 'Declined']
+    const statusCounts = {
+        'Open': (statusData['Open'] || 0),
+        'Pending': (statusData['Pending'] || 0) + (statusData['Submitted'] || 0),
+        'In Progress': (statusData['In Progress'] || 0) + (statusData['Working'] || 0),
+        'Resolved': (statusData['Resolved'] || 0),
+        'Closed': (statusData['Closed'] || 0),
+        'Declined': (statusData['Declined'] || 0)
+    };
+
+    console.log('AdminAnalyticsChart: Mapped Counts', statusCounts);
+
     const statuses = ['Open', 'Pending', 'In Progress', 'Resolved', 'Closed', 'Declined'];
 
     // Calculate Category Distribution
-    const categoryCounts = safeFeedbacks.reduce((acc, fb) => {
-        const category = fb.category || 'Uncategorized';
-        acc[category] = (acc[category] || 0) + 1;
-        return acc;
-    }, {});
-
+    const categoryCounts = categoryData;
     const categories = Object.keys(categoryCounts);
     const maxCount = Math.max(...Object.values(statusCounts), 1);
 

@@ -236,11 +236,14 @@
 }
 
 /* MAKE TABLE SCROLLABLE IN MOBILE */
+.table-responsive {
+    overflow-x: auto;
+}
+
 @media (max-width: 768px) {
     .vision-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
+        min-width: 600px;
+        /* Force minimum width to trigger scroll */
     }
 }
 

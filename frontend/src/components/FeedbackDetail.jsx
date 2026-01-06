@@ -58,18 +58,22 @@ const FeedbackDetail = ({ feedback: initialFeedback, onClose }) => {
                         <div className="attachment-box" style={{ marginTop: '20px' }}>
                             <h3 style={{ color: '#0B1A30' }}>Attachment</h3>
                             <div style={{ marginTop: '10px' }}>
-                                {/* Check if it's an image */}
-                                {feedback.attachment.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+                                {/* Check if it's an image - simplistic check for legacy paths OR if it's the new API route (we assume it's viewable) */}
+                                {feedback.attachment.match(/\.(jpeg|jpg|png|gif)$/i) || feedback.attachment.includes('/attachment') ? (
                                     <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--vision-card-border)' }}>
                                         <img
-                                            src={`http://localhost:5000/${feedback.attachment.replace(/\\/g, "/")}`}
+                                            src={feedback.attachment.startsWith('/api')
+                                                ? `http://localhost:5000${feedback.attachment}`
+                                                : `http://localhost:5000/${feedback.attachment.replace(/\\/g, "/")}`}
                                             alt="Attachment"
                                             style={{ maxWidth: '100%', maxHeight: '400px', display: 'block' }}
                                         />
                                     </div>
                                 ) : (
                                     <a
-                                        href={`http://localhost:5000/${feedback.attachment.replace(/\\/g, "/")}`}
+                                        href={feedback.attachment.startsWith('/api')
+                                            ? `http://localhost:5000${feedback.attachment}`
+                                            : `http://localhost:5000/${feedback.attachment.replace(/\\/g, "/")}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{

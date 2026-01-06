@@ -26,10 +26,15 @@ const UserDashboard = () => {
     );
 
     // Stats Calculation
-    const total = myFeedbacks.length;
-    const pending = myFeedbacks.filter(f => f.status === 'Pending' || f.status === 'Submitted').length;
-    const inProgress = myFeedbacks.filter(f => f.status === 'In Progress' || f.status === 'Working').length;
-    const resolved = myFeedbacks.filter(f => f.status === 'Resolved' || f.status === 'Closed').length;
+    // Stats Calculation using Global Analytics (Real-time & Accurate across all pages)
+    const { analytics } = useFeedback();
+    const statusData = analytics?.status || {};
+
+    // DB Enums: ['Submitted', 'Pending', 'In Progress', 'Working', 'Resolved', 'Closed', 'Open', 'Declined']
+    const total = analytics?.total || 0;
+    const pending = (statusData['Pending'] || 0) + (statusData['Submitted'] || 0) + (statusData['Open'] || 0);
+    const inProgress = (statusData['In Progress'] || 0) + (statusData['Working'] || 0);
+    const resolved = (statusData['Resolved'] || 0) + (statusData['Closed'] || 0);
 
     // Helper to render profile content
     const renderProfileContent = () => {
@@ -137,67 +142,73 @@ const UserDashboard = () => {
                             <p>You haven't submitted any feedback yet.</p>
                         </div>
                     ) : (
-                        <table className="vision-table">
-                            <thead>
-                                <tr>
-                                    <th>TITLE</th>
-                                    <th>CATEGORY</th>
-                                    <th>PRIORITY</th>
-                                    <th>STATUS</th>
-                                    <th>ACTIONS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {myFeedbacks.map((fb) => (
-                                    <tr key={fb._id} onClick={() => setSelectedFeedback(fb)} style={{ cursor: 'pointer' }}>
-                                        <td className="company-cell">
-                                            <div className="logo-box slack" style={{ background: '#4A90E2' }}>{fb.submittedBy?.name?.charAt(0).toUpperCase() || 'U'}</div>
-                                            <span style={{ fontWeight: 600 }}>{fb.title}</span>
-                                        </td>
-                                        <td style={{ color: '#A0AEC0' }}>{fb.category}</td>
-                                        <td>
-                                            <span className={`priority ${fb.priority.toLowerCase()}`} style={{
-                                                padding: '4px 8px', borderRadius: '8px', fontSize: '10px',
-                                                background: fb.priority === 'High' ? 'rgba(227, 26, 26, 0.2)' : 'rgba(1, 181, 116, 0.2)',
-                                                color: fb.priority === 'High' ? '#E31A1A' : '#01B574',
-                                                fontWeight: 700
-                                            }}>
-                                                {fb.priority}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="progress-bar" style={{ width: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', height: '6px', marginBottom: '5px' }}>
-                                                <div className="fill" style={{
-                                                    width: fb.status === 'Resolved' ? '100%' : fb.status === 'In Progress' ? '50%' : '10%',
-                                                    background: fb.status === 'Resolved' ? '#01B574' : '#00D2FF',
-                                                    height: '100%', borderRadius: '4px'
-                                                }}></div>
-                                            </div>
-                                            <span style={{ fontSize: '10px', color: '#fff' }}>{fb.status}</span>
-                                        </td>
-                                        <td onClick={e => e.stopPropagation()}>
-                                            {fb.status === 'Submitted' || fb.status === 'Open' || fb.status === 'In Progress' || fb.status === 'Working' ? (
-                                                <button className="btn-text" style={{ fontSize: '10px', color: '#00D2FF' }} onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedFeedback(fb);
-                                                    setIsFormOpen(true);
-                                                }}>EDIT</button>
-                                            ) : fb.status === 'Resolved' ? (
-                                                <button className="btn-text" style={{ fontSize: '10px', color: '#E31A1A' }} onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleCloseFeedback(fb._id);
-                                                }}>CLOSE</button>
-                                            ) : null}
-                                            <button className="btn-text" style={{ fontSize: '12px', color: '#E31A1A', marginLeft: '25px' }} onClick={(e) => {
-                                                e.stopPropagation();
-                                                setTaskToDelete(fb._id);
-                                                setShowDeletePopup(true);
-                                            }}><FaTrash /></button>
-                                        </td>
+                        <div className="table-responsive">
+                            <table className="vision-table">
+                                <thead>
+                                    <tr>
+                                        <th>TITLE</th>
+                                        <th>CATEGORY</th>
+                                        <th>PRIORITY</th>
+                                        <th>STATUS</th>
+                                        <th>ACTIONS</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {myFeedbacks.map((fb) => (
+                                        <tr key={fb._id} onClick={() => setSelectedFeedback(fb)} style={{ cursor: 'pointer' }}>
+                                            <td className="company-cell">
+                                                <div className="logo-box slack" style={{ background: '#4A90E2' }}>{fb.submittedBy?.name?.charAt(0).toUpperCase() || 'U'}</div>
+                                                <span style={{ fontWeight: 600 }}>{fb.title}</span>
+                                            </td>
+                                            <td style={{ color: '#A0AEC0' }}>{fb.category}</td>
+                                            <td>
+                                                <span className={`priority ${fb.priority.toLowerCase()}`} style={{
+                                                    padding: '4px 8px', borderRadius: '8px', fontSize: '10px',
+                                                    background: fb.priority === 'High' ? 'rgba(227, 26, 26, 0.2)' :
+                                                        fb.priority === 'Medium' ? 'rgba(255, 183, 94, 0.2)' :
+                                                            'rgba(1, 181, 116, 0.2)',
+                                                    color: fb.priority === 'High' ? '#E31A1A' :
+                                                        fb.priority === 'Medium' ? '#FFB75E' :
+                                                            '#01B574',
+                                                    fontWeight: 700
+                                                }}>
+                                                    {fb.priority}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="progress-bar" style={{ width: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', height: '6px', marginBottom: '5px' }}>
+                                                    <div className="fill" style={{
+                                                        width: fb.status === 'Resolved' ? '100%' : fb.status === 'In Progress' ? '50%' : '10%',
+                                                        background: fb.status === 'Resolved' ? '#01B574' : '#00D2FF',
+                                                        height: '100%', borderRadius: '4px'
+                                                    }}></div>
+                                                </div>
+                                                <span style={{ fontSize: '10px', color: '#fff' }}>{fb.status}</span>
+                                            </td>
+                                            <td onClick={e => e.stopPropagation()}>
+                                                {fb.status === 'Submitted' || fb.status === 'Open' || fb.status === 'In Progress' || fb.status === 'Working' ? (
+                                                    <button className="btn-text" style={{ fontSize: '10px', color: '#00D2FF' }} onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedFeedback(fb);
+                                                        setIsFormOpen(true);
+                                                    }}>EDIT</button>
+                                                ) : fb.status === 'Resolved' ? (
+                                                    <button className="btn-text" style={{ fontSize: '10px', color: '#E31A1A' }} onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleCloseFeedback(fb._id);
+                                                    }}>CLOSE</button>
+                                                ) : null}
+                                                <button className="btn-text" style={{ fontSize: '12px', color: '#E31A1A', marginLeft: '25px' }} onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setTaskToDelete(fb._id);
+                                                    setShowDeletePopup(true);
+                                                }}><FaTrash /></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
             </div>

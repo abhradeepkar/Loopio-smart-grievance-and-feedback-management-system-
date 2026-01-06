@@ -1,8 +1,34 @@
 const Feedback = require('../models/Feedback');
+const mongoose = require('mongoose');
 const User = require('../models/User'); // Import User model
 const { createNotification } = require('./notificationController');
-const fs = require('fs');
 const path = require('path');
+
+// Helper to transform feedback for response
+// Helper to transform feedback for response
+const transformFeedback = (feedback) => {
+    const feedbackObj = feedback.toObject ? feedback.toObject() : feedback;
+
+    // Check if attachment exists
+    if (feedbackObj.attachment) {
+        // If it's a string, it's a legacy path or already transformed
+        if (typeof feedbackObj.attachment === 'string') {
+            return feedbackObj;
+        }
+
+        // It's an object (New Schema). 
+        // We check for filename OR data because 'data' might be excluded in some queries (like getFeedbacks)
+        if (feedbackObj.attachment.filename || feedbackObj.attachment.data) {
+            feedbackObj.attachment = `/api/feedbacks/${feedbackObj._id}/attachment`;
+        } else {
+            // Empty object or invalid state
+            feedbackObj.attachment = null;
+        }
+    } else {
+        feedbackObj.attachment = null;
+    }
+    return feedbackObj;
+};
 
 // @desc    Get all feedbacks
 // @route   GET /api/feedbacks
@@ -37,6 +63,7 @@ const getFeedbacks = async (req, res) => {
         }
 
         const feedbacks = await Feedback.find(query)
+            .select('-attachment.data') // Exclude heavy binary data
             .populate('submittedBy', 'name email profilePicture')
             .populate('assignedTo', 'name email profilePicture')
             .populate({
@@ -49,8 +76,11 @@ const getFeedbacks = async (req, res) => {
 
         const total = await Feedback.countDocuments(query);
 
+        // Transform feedbacks to include attachment URL
+        const transformedFeedbacks = feedbacks.map(transformFeedback);
+
         res.status(200).json({
-            feedbacks,
+            feedbacks: transformedFeedbacks,
             page,
             pages: Math.ceil(total / limit),
             total
@@ -74,7 +104,11 @@ const createFeedback = async (req, res) => {
 
         let attachment = null;
         if (req.file) {
-            attachment = req.file.path.replace(/\\/g, "/"); // Normalize path for Windows
+            attachment = {
+                filename: req.file.originalname,
+                data: req.file.buffer,
+                contentType: req.file.mimetype
+            };
         }
 
         const feedback = new Feedback({
@@ -84,20 +118,25 @@ const createFeedback = async (req, res) => {
             priority,
             submittedBy: req.user.id, // Assuming req.user.id is the correct user ID field
             status: 'Submitted',
-            attachment // Save file path
+            attachment // Save file object
         });
 
         const createdFeedback = await feedback.save();
         console.log('Feedback Created:', createdFeedback._id);
 
         // Populate author details for immediate UI update
-        const populatedFeedback = await Feedback.findById(createdFeedback._id)
+        // Need to re-fetch to exclude binary data if we want to be safe, 
+        // or just manually transform. Re-fetching is safer for population.
+        const populatedFeedbackData = await Feedback.findById(createdFeedback._id)
+            .select('-attachment.data')
             .populate('submittedBy', 'name email profilePicture')
             .populate('assignedTo', 'name email profilePicture')
             .populate({
                 path: 'comments.authorId',
                 select: 'name profilePicture role'
             });
+
+        const populatedFeedback = transformFeedback(populatedFeedbackData);
 
         // Real-time Dashboard Update
         if (req.app.get('socketio')) {
@@ -182,8 +221,21 @@ const updateFeedback = async (req, res) => {
         if (req.body.priority) feedback.priority = req.body.priority;
         if (req.body.estimatedResolutionDate) feedback.estimatedResolutionDate = req.body.estimatedResolutionDate;
 
+        // Handle File Update
+        if (req.file) {
+            console.log('Update Feedback: File received:', req.file.originalname);
+            feedback.attachment = {
+                filename: req.file.originalname,
+                data: req.file.buffer,
+                contentType: req.file.mimetype
+            };
+        } else {
+            console.log('Update Feedback: No file received');
+        }
+
         // Handle Status Update
         if (req.body.status && req.body.status !== oldStatus) {
+            console.log('Update Feedback: Status changing to', req.body.status);
             feedback.status = req.body.status;
 
             // 1. Notify Submitter (User) - ONLY if not the one updating
@@ -319,13 +371,16 @@ const updateFeedback = async (req, res) => {
 
 
         const updatedFeedback = await feedback.save();
-        const populatedFeedback = await Feedback.findById(updatedFeedback._id)
+        const populatedFeedbackData = await Feedback.findById(updatedFeedback._id)
+            .select('-attachment.data')
             .populate('submittedBy', 'name email profilePicture')
             .populate('assignedTo', 'name email profilePicture')
             .populate({
                 path: 'comments.authorId',
                 select: 'name profilePicture role'
             });
+
+        const populatedFeedback = transformFeedback(populatedFeedbackData);
 
         req.app.get('socketio').emit('feedback_updated', populatedFeedback);
         req.app.get('socketio').emit('analytics_update');
@@ -402,13 +457,16 @@ const addComment = async (req, res) => {
         }
 
         // Re-populate to ensure consistent data structure
-        const populatedFeedback = await Feedback.findById(req.params.id)
+        const populatedFeedbackData = await Feedback.findById(req.params.id)
+            .select('-attachment.data')
             .populate('submittedBy', 'name email profilePicture')
             .populate('assignedTo', 'name email profilePicture')
             .populate({
                 path: 'comments.authorId',
                 select: 'name profilePicture role'
             });
+
+        const populatedFeedback = transformFeedback(populatedFeedbackData);
 
         req.app.get('socketio').emit('feedback_updated', populatedFeedback);
 
@@ -439,16 +497,7 @@ const deleteFeedback = async (req, res) => {
             return res.status(401).json({ message: 'User not authorized to delete this feedback' });
         }
 
-        // Delete attached file if exists
-        if (feedback.attachment) {
-            const filePath = path.join(__dirname, '..', feedback.attachment);
-            if (fs.existsSync(filePath)) {
-                fs.unlink(filePath, (err) => {
-                    if (err) console.error('Failed to delete local file:', err);
-                    else console.log('Deleted local file:', filePath);
-                });
-            }
-        }
+        // No need to unlink local file anymore as it's in DB
 
         // Notify Submitter if Admin deletes it
         if (req.user.role === 'admin' && feedback.submittedBy.toString() !== req.user.id) {
@@ -502,13 +551,16 @@ const deleteComment = async (req, res) => {
         await feedback.save();
 
         // Re-populate
-        const populatedFeedback = await Feedback.findById(req.params.id)
+        const populatedFeedbackData = await Feedback.findById(req.params.id)
+            .select('-attachment.data')
             .populate('submittedBy', 'name email profilePicture')
             .populate('assignedTo', 'name email profilePicture')
             .populate({
                 path: 'comments.authorId',
                 select: 'name profilePicture role'
             });
+
+        const populatedFeedback = transformFeedback(populatedFeedbackData);
 
         req.app.get('socketio').emit('feedback_updated', populatedFeedback);
 
@@ -524,19 +576,48 @@ const deleteComment = async (req, res) => {
 // @access  Private
 const getAnalytics = async (req, res) => {
     try {
-        const totalFeedbacks = await Feedback.countDocuments();
+        // Define match stage based on user role
+        // Define match stage based on user role
+        const matchStage = {};
+        if (req.user.role === 'user') {
+            // Use _id directly from the mongoose document
+            matchStage.submittedBy = req.user._id;
+        }
+
+        const totalFeedbacks = await Feedback.countDocuments(matchStage);
 
         const statusCounts = await Feedback.aggregate([
+            { $match: matchStage },
             { $group: { _id: "$status", count: { $sum: 1 } } }
         ]);
 
         const priorityCounts = await Feedback.aggregate([
+            { $match: matchStage },
             { $group: { _id: "$priority", count: { $sum: 1 } } }
         ]);
 
         const categoryCounts = await Feedback.aggregate([
+            { $match: matchStage },
             { $group: { _id: "$category", count: { $sum: 1 } } }
         ]);
+
+        // Monthly Activity (Last 12 months)
+        const monthlyCounts = await Feedback.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: { $month: "$createdAt" }, // 1-12
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        console.log('getAnalytics Debug:', {
+            matchStage,
+            totalFeedbacks,
+            monthlyCounts
+        });
 
         // Helper to format aggregation result to object
         const formatConfig = (arr) => {
@@ -547,16 +628,52 @@ const getAnalytics = async (req, res) => {
             return acc;
         };
 
+        // Format monthly data 
+        const formatMonthly = (arr) => {
+            // Initialize all 12 months to 0
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const result = months.map((m, index) => ({ month: m, value: 0 }));
+
+            arr.forEach(item => {
+                // item._id is 1-based month index
+                if (item._id >= 1 && item._id <= 12) {
+                    result[item._id - 1].value = item.count;
+                }
+            });
+            return result;
+        };
+
         res.status(200).json({
             total: totalFeedbacks,
             status: formatConfig(statusCounts),
             priority: formatConfig(priorityCounts),
-            category: formatConfig(categoryCounts)
+            category: formatConfig(categoryCounts),
+            monthlyActivity: formatMonthly(monthlyCounts)
         });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Get feedback attachment
+// @route   GET /api/feedbacks/:id/attachment
+// @access  Private (or Public if we want)
+const getFeedbackAttachment = async (req, res) => {
+    try {
+        // We do NOT use .select('-attachment.data') here because we NEED the data
+        const feedback = await Feedback.findById(req.params.id);
+
+        if (!feedback || !feedback.attachment || !feedback.attachment.data) {
+            return res.status(404).send('No attachment found');
+        }
+
+        res.set('Content-Type', feedback.attachment.contentType);
+        res.send(feedback.attachment.data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
     }
 };
 
@@ -567,5 +684,6 @@ module.exports = {
     addComment,
     deleteFeedback,
     deleteComment,
-    getAnalytics
+    getAnalytics,
+    getFeedbackAttachment
 };

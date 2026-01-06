@@ -24,7 +24,9 @@ const feedbackSchema = new mongoose.Schema({
         enum: ['Bug', 'Feature Request', 'Improvement', 'Other', 'Software Issue', 'HR Issue', 'Project Issue', 'Workplace Issue']
     },
     attachment: {
-        type: String // Path to the uploaded file
+        filename: String,
+        data: Buffer,
+        contentType: String
     },
     priority: {
         type: String,

@@ -79,7 +79,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/feedbacks', require('./routes/feedback'));
 app.use('/api/notifications', require('./routes/notification'));
-app.use('/uploads', express.static('uploads'));
+app.use('/api/notifications', require('./routes/notification'));
 
 //  DEFAULT ROUTE 
 app.get('/', (req, res) => {

@@ -364,6 +364,7 @@ export const FeedbackProvider = ({ children }) => {
 
             if (res.ok) {
                 const newFeedback = await res.json();
+                fetchAnalytics(); // Ensure stats update immediately
                 // showToast('Feedback submitted successfully!', 'success'); // Removed to avoid duplicate with socket notification
                 return { success: true };
             }
@@ -452,13 +453,36 @@ export const FeedbackProvider = ({ children }) => {
     const editFeedback = async (id, updatedData) => {
         const token = localStorage.getItem('token');
         try {
+            let body;
+            let headers = {
+                Authorization: `Bearer ${token}`
+            };
+
+            // Check if we need FormData (file upload)
+            if (updatedData.file || updatedData instanceof FormData) {
+                console.log('context: editFeedback: Switching to FormData. File found:', updatedData.file);
+                const formData = new FormData();
+                // Append all fields
+                Object.keys(updatedData).forEach(key => {
+                    // special handling for file to ensure it's appended correctly
+                    if (key === 'file' && updatedData[key]) {
+                        formData.append('file', updatedData[key]);
+                    } else if (updatedData[key] !== null && updatedData[key] !== undefined) {
+                        formData.append(key, updatedData[key]);
+                    }
+                });
+                body = formData;
+                // No Content-Type header for FormData
+            } else {
+                console.log('context: editFeedback: Sending JSON (No file)');
+                body = JSON.stringify(updatedData);
+                headers['Content-Type'] = 'application/json';
+            }
+
             const res = await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(updatedData)
+                headers: headers,
+                body: body
             });
             if (res.ok) {
                 const updatedFeedback = await res.json();

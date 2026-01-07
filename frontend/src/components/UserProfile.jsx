@@ -79,7 +79,7 @@ const UserProfile = ({ onClose }) => {
                     <div className="profile-avatar-large" style={{ position: 'relative' }}>
                         {(!removePhoto && (selectedFile || user.profilePicture)) ? (
                             <img
-                                src={selectedFile ? URL.createObjectURL(selectedFile) : `http://localhost:5000/${user.profilePicture}`}
+                                src={selectedFile ? URL.createObjectURL(selectedFile) : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${user.profilePicture}`}
                                 alt="Profile"
                                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                             />

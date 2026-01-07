@@ -63,8 +63,8 @@ const FeedbackDetail = ({ feedback: initialFeedback, onClose }) => {
                                     <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--vision-card-border)' }}>
                                         <img
                                             src={feedback.attachment.startsWith('/api')
-                                                ? `http://localhost:5000${feedback.attachment}`
-                                                : `http://localhost:5000/${feedback.attachment.replace(/\\/g, "/")}`}
+                                                ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${feedback.attachment}`
+                                                : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${feedback.attachment.replace(/\\/g, "/")}`}
                                             alt="Attachment"
                                             style={{ maxWidth: '100%', maxHeight: '400px', display: 'block' }}
                                         />
@@ -72,8 +72,8 @@ const FeedbackDetail = ({ feedback: initialFeedback, onClose }) => {
                                 ) : (
                                     <a
                                         href={feedback.attachment.startsWith('/api')
-                                            ? `http://localhost:5000${feedback.attachment}`
-                                            : `http://localhost:5000/${feedback.attachment.replace(/\\/g, "/")}`}
+                                            ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${feedback.attachment}`
+                                            : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${feedback.attachment.replace(/\\/g, "/")}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{
@@ -104,7 +104,7 @@ const FeedbackDetail = ({ feedback: initialFeedback, onClose }) => {
                                             <div className="comment-avatar" style={{ marginRight: '10px', marginTop: '5px' }}>
                                                 {comment.authorId?.profilePicture ? (
                                                     <img
-                                                        src={`http://localhost:5000/${comment.authorId.profilePicture}`}
+                                                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${comment.authorId.profilePicture}`}
                                                         alt="Avatar"
                                                         style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover' }}
                                                     />
@@ -139,7 +139,7 @@ const FeedbackDetail = ({ feedback: initialFeedback, onClose }) => {
                                             <div className="comment-avatar" style={{ marginLeft: '10px', marginTop: '5px' }}>
                                                 {comment.authorId?.profilePicture ? (
                                                     <img
-                                                        src={`http://localhost:5000/${comment.authorId.profilePicture}`}
+                                                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${comment.authorId.profilePicture}`}
                                                         alt="Avatar"
                                                         style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover' }}
                                                     />

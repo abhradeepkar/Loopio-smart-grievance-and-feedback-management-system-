@@ -63,7 +63,7 @@ const AllFeedbacksPage = () => {
                                 <td style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     {fb.submittedBy?.profilePicture ? (
                                         <img
-                                            src={`http://localhost:5000/${fb.submittedBy.profilePicture}`}
+                                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${fb.submittedBy.profilePicture}`}
                                             alt="Avatar"
                                             style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
                                         />

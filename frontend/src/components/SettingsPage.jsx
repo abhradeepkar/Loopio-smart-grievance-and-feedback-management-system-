@@ -42,7 +42,7 @@ const SettingsPage = () => {
                 address: user.address || ''
             });
             if (user.profilePicture) {
-                setPreviewUrl(`http://localhost:5000/${user.profilePicture}`);
+                setPreviewUrl(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${user.profilePicture}`);
             }
         }
     }, [user]);
@@ -123,7 +123,7 @@ const SettingsPage = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:5000/api/users/password', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users/password`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

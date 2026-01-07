@@ -97,7 +97,7 @@ const UsersPage = () => {
                                     <td className="company-cell" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                         {user.profilePicture ? (
                                             <img
-                                                src={`http://localhost:5000/${user.profilePicture}`}
+                                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${user.profilePicture}`}
                                                 alt={user.name}
                                                 style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
                                             />

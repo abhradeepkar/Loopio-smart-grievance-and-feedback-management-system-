@@ -41,7 +41,7 @@ const UserDashboard = () => {
         if (user?.profilePicture) {
             return (
                 <img
-                    src={`http://localhost:5000/${user.profilePicture}`}
+                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${user.profilePicture}`}
                     alt="Profile"
                     style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                 />

@@ -4,8 +4,9 @@ import { useAuth } from '../components/AuthProvider';
 import { useToast } from './ToastContext';
 
 const FeedbackContext = createContext();
-const API_URL = 'http://localhost:5000/api/feedbacks';
-const AUTH_URL = 'http://localhost:5000/api/auth';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = `${BASE_URL}/api/feedbacks`;
+const AUTH_URL = `${BASE_URL}/api/auth`;
 
 export const useFeedback = () => useContext(FeedbackContext);
 
@@ -28,7 +29,7 @@ export const FeedbackProvider = ({ children }) => {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const res = await fetch(`http://localhost:5000/api/notifications`, {
+            const res = await fetch(`${BASE_URL}/api/notifications`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
@@ -43,7 +44,7 @@ export const FeedbackProvider = ({ children }) => {
     const markNotificationAsRead = async (id) => {
         try {
             const token = localStorage.getItem('token');
-            await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+            await fetch(`${BASE_URL}/api/notifications/${id}/read`, {
                 method: 'PUT',
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -60,7 +61,7 @@ export const FeedbackProvider = ({ children }) => {
     const clearNotifications = async () => {
         try {
             const token = localStorage.getItem('token');
-            await fetch(`http://localhost:5000/api/notifications`, {
+            await fetch(`${BASE_URL}/api/notifications`, {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -191,7 +192,7 @@ export const FeedbackProvider = ({ children }) => {
     useEffect(() => {
         // Initialize socket only once
         if (!socketRef.current) {
-            socketRef.current = io('http://localhost:5000');
+            socketRef.current = io(BASE_URL);
             console.log('Socket initialized');
         }
 
@@ -379,7 +380,7 @@ export const FeedbackProvider = ({ children }) => {
 
     const updateFeedbackStatus = async (id, status, additionalData = {}) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/feedbacks/${id}`, {
+            const res = await fetch(`${BASE_URL}/api/feedbacks/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

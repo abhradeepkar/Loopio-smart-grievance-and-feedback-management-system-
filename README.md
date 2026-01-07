@@ -146,39 +146,31 @@ erDiagram
     USER ||--o{ ASSIGNMENT : "developer handles"
 ```
 
-## 🔄 Workflow Diagram (User, Admin & Developer)
-
 ```mermaid
 flowchart TD
 
-    %% START
     A([START]) --> B([Login or Signup])
-
-    %% Decision
     B --> C{Identify User Role}
 
-    %% USER ROLE
     C -->|User| U1[User Dashboard]
     U1 --> U2[Submit Feedback]
     U2 --> U3[Feedback Saved in MongoDB]
 
-    %% ADMIN ROLE
     C -->|Admin| A1[Admin Dashboard]
     A1 --> A2[View All Feedbacks]
     A2 --> A3[Assign Feedback to Developer]
     A3 --> U3
     A1 --> A4[Analytics and Reports]
 
-    %% DEVELOPER ROLE
     C -->|Developer| D1[Developer Dashboard]
     D1 --> D2[View Assigned Feedback]
     D2 --> D3[Update Feedback Status]
     D3 --> D4[Status Saved in MongoDB]
 
-    %% END
     U3 --> END([END])
     D4 --> END
     A4 --> END
+
 
 
 
@@ -200,6 +192,7 @@ The backend of the **Loopio – Smart Grievance & Feedback Management System** h
 https://loopio-smart-grievance-and-feedback.onrender.com
 
 The backend server is live and operational. When accessed, it confirms that the **Feedback API is running successfully**. This deployment enables real-time grievance handling, notification services, and secure API communication with the frontend.
+
 
 
 

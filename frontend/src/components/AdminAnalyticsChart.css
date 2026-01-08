@@ -1,201 +1,227 @@
 /* AdminAnalyticsChart.css - Vision UI Update */
+
 .analytics-charts {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 24px;
+    /* Spacing Rule: Status ↔ Category spacing: 24px */
+    width: 100%;
 }
 
 .chart-container {
     background: transparent;
     padding: 0;
+    width: 100%;
 }
 
+/* Headings: Medium weight, Left Aligned */
 .chart-container h3 {
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 0;
     color: #fff;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
+    /* Visual Hierarchy: Headings → medium weight */
+    letter-spacing: 0.5px;
 }
 
-/* Bar Chart */
+/* ==============================================
+   STATUS SECTION
+   ============================================== */
 .bar-chart {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    height: 200px;
-    /* Reduced height */
-    padding-bottom: 0;
-    border-bottom: none;
-    padding: 0 10px;
+    height: 140px;
+    /* Adjusted height for better proportion */
+    padding: 0;
+    /* Removing side padding to aligns with everything else */
+    width: 100%;
 }
 
 .bar-group {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    height: 100%;
     justify-content: flex-end;
+    flex: 1;
+    /* Equal space distribution */
+    height: 100%;
+    position: relative;
 }
 
 .bar-wrapper {
     height: 100%;
     width: 6px;
-    /* Stick-like thin bars */
+    /* Bars: Equal width */
     background: rgba(255, 255, 255, 0.05);
+    /* Track color */
     border-radius: 10px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    position: relative;
-    overflow: hidden;
-    /* To clip the fill */
+    /* overflow: hidden; Removed to show value outside */
 }
 
 .bar {
     width: 100%;
     border-radius: 10px;
-    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 0px;
+    position: relative;
 }
 
-/* Background Glow for current bar */
-.bar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50%;
-    background: inherit;
-    filter: blur(5px);
-    opacity: 0.5;
+/* Bar Label Fix: Directly below bar */
+.bar-label {
+    margin-top: 8px;
+    font-size: 10px;
+    color: #A0AEC0;
+    text-align: center;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .bar-value {
     position: absolute;
-    top: -25px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 10px;
     font-weight: 700;
     color: #fff;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 2px 5px;
-    border-radius: 4px;
-    opacity: 0;
-    /* Hide by default, show on hover */
-    transition: opacity 0.2s;
-}
-
-.bar-group:hover .bar-value {
+    padding: 2px 0;
     opacity: 1;
+    /* Always visible */
+    transition: opacity 0.2s;
+    pointer-events: none;
+    z-index: 10;
 }
 
-.bar-label {
-    margin-top: 10px;
-    font-size: 10px;
-    color: #A0AEC0;
-    text-align: center;
-    font-weight: 700;
+[data-theme='light'] .bar-value {
+    color: #000;
 }
 
-/* Label Colors matching Bars - Optimization for Dual Visibility */
+/* Bar Colors - Keeping semantic colors for Statuses as per "Status Section" requirements usually implies meaning */
+.bar.submitted {
+    background: #A0AEC0;
+}
+
+.bar.open {
+    background: #F6AD55;
+}
+
+.bar.pending {
+    background: #F6AD55;
+    box-shadow: 0 0 10px rgba(246, 173, 85, 0.4);
+}
+
+/* Highlighted */
+.bar.in-progress {
+    background: #0075FF;
+}
+
+.bar.resolved {
+    background: #01B574;
+}
+
+.bar.closed {
+    background: #E53E3E;
+}
+
+.bar.declined {
+    background: #C53030;
+}
+
+/* Label Colors */
 .bar-label.submitted {
     color: #718096;
-    /* Cool Gray - visible on both */
-    font-weight: 800;
 }
 
+.bar-label.open,
 .bar-label.pending {
-    color: #DD6B20;
-    /* Darker Orange - visible on white & dark */
-    font-weight: 800;
+    color: #F6AD55;
 }
 
 .bar-label.in-progress {
     color: #0075FF;
-    /* Loopio Blue - visible on both */
-    font-weight: 800;
 }
 
 .bar-label.resolved {
-    color: #00A86B;
-    /* Jade Green - visible on both */
-    font-weight: 800;
+    color: #01B574;
 }
-
 
 .bar-label.closed {
     color: #E53E3E;
-    /* Red - visible on both */
-    font-weight: 800;
 }
 
 .bar-label.declined {
     color: #C53030;
-    /* Darker Red for Declined */
-    font-weight: 800;
 }
 
-/* Bar Colors with Gradients */
-.bar.submitted {
-    background: linear-gradient(to top, #A0AEC0, #E2E8F0);
+
+/* ==============================================
+   CATEGORY BREAKDOWN
+   ============================================== */
+
+/* View All Button placement */
+/* View All Button placement */
+.view-all-btn {
+    background: none;
+    border: none;
+    color: #4A90E2;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 10px;
+    /* Corrected from 4px,10pxx */
+    margin: 16px auto 0;
+    width: 100px;
+    /* Added width */
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: center;
+    /* Ensure text is centered in fixed width */
 }
 
-.bar.pending {
-    background: linear-gradient(to top, #FFB547, #ffc247);
+.view-all-btn:hover {
+    color: #3182CE;
+    text-decoration: underline;
+    background: none;
 }
 
-.bar.in-progress {
-    background: linear-gradient(to top, #0075FF, #21D4FD);
-}
-
-.bar.resolved {
-    background: linear-gradient(to top, #01B574, #55d6aa);
-}
-
-.bar.closed {
-    background: linear-gradient(to top, #E31A1A, #ff5757);
-}
-
-.bar.declined {
-    background: linear-gradient(to top, #C53030, #FC8181);
-}
-
-/* Category List */
+/* List container */
 .category-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding-left: 20px;
+    gap: 12px;
+    /* Row spacing: 12px */
+    width: 100%;
+    padding: 0;
+    /* Reset padding */
 }
 
+/* Category Item: Grid Layout [Name | Bar | Count] */
 .category-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 15px;
-}
-
-.category-info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
+    display: grid;
+    grid-template-columns: auto 1fr 30px;
+    /* Reduced Name gap */
+    align-items: center;
+    /* Vertical Center */
+    gap: 15px;
+    width: 100%;
 }
 
 .category-name {
-    /* Resetting previous specific widths */
-    min-width: auto;
-}
-
-.category-count {
-    /* Resetting previous specific alignment */
-    text-align: right;
-    min-width: auto;
+    font-size: 12px;
+    color: #fff;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    /* Left align */
 }
 
 .progress-bar-bg {
@@ -208,86 +234,81 @@
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #0075FF 0%, #21D4FD 100%);
+    background: #0075FF;
+    /* Primary accent color only */
     border-radius: 10px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 10px rgba(0, 117, 255, 0.5);
+}
+
+.category-count {
+    font-size: 12px;
+    color: #A0AEC0;
+    /* Lighter color */
+    font-weight: 400;
+    text-align: right;
+    /* Right align */
 }
 
 /* ==============================================
-   LIGHT MODE OVERRIDES FOR CHARTS
+   LIGHT MODE OVERRIDES
    ============================================== */
-[data-theme='light'] .chart-container h3 {
+[data-theme='light'] .chart-container h3,
+[data-theme='light'] .category-name {
     color: #0B1A30 !important;
 }
 
-[data-theme='light'] .bar-wrapper {
-    background: rgba(0, 0, 0, 0.05);
-    /* Darker track for light mode */
-}
-
-[data-theme='light'] .bar-value {
-    color: #000 !important;
-    background: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme='light'] .category-name,
 [data-theme='light'] .category-count {
-    color: #0B1A30 !important;
+    color: #718096 !important;
 }
 
-[data-theme='light'] .category-info {
-    color: #0B1A30 !important;
+[data-theme='light'] .view-all-btn {
+    color: #0052CC;
 }
 
+[data-theme='light'] .view-all-btn:hover {
+    background: rgba(0, 82, 204, 0.05);
+}
+
+[data-theme='light'] .bar-wrapper,
 [data-theme='light'] .progress-bar-bg {
-    background-color: rgba(0, 0, 0, 0.05);
-    /* Darker track for light mode */
+    background: rgba(0, 0, 0, 0.05);
 }
 
-/* Responsive Scroll for Mobile */
+[data-theme='light'] .bar-label.submitted {
+    color: #718096;
+}
+
+/* Mobile Logic */
 @media (max-width: 768px) {
     .analytics-charts {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        width: 100%;
-        /* Ensure full width */
         overflow: hidden;
-        /* Prevent parent spill */
     }
 
-    /* Apply scroll to ANY chart container (Graph or future) */
     .chart-container {
-        width: 100%;
         display: block;
         overflow-x: auto;
-        /* Enable scroll */
         -webkit-overflow-scrolling: touch;
         padding-bottom: 20px;
-        /* Space for scrollbar */
     }
 
-    /* Force the Bar Chart to be wide, triggering the scroll */
+    /* Force width to trigger scroll */
     .bar-chart {
-        min-width: 1400px;
-        /* Adjusted width for 500px padding */
-        padding-right: 20px;
-        padding-left: 500px;
-        /* Reverted padding to 500px as requested */
+        min-width: 800px;
+        padding-left: 200px;
     }
 
-    /* Ensure categories stack nicely without forcing width */
-    .category-list {
-        width: 100%;
-        min-width: auto;
-        /* Let it shrink/grow */
+    .category-item {
+        grid-template-columns: 90px 1fr 20px;
+        gap: 10px;
     }
 
-    /* Custom Scrollbar Styles for Mobile */
+    .view-all-btn {
+        font-size: 10px;
+    }
+
+    /* Scrollbar Styling */
     .chart-container::-webkit-scrollbar {
-        height: 8px;
-        display: block;
+        height: 6px;
     }
 
     .chart-container::-webkit-scrollbar-track {

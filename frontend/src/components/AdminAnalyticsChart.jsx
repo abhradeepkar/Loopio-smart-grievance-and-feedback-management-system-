@@ -1,9 +1,11 @@
 import React from 'react';
 import { useFeedback } from '../context/FeedbackContext';
+import { useNavigate } from 'react-router-dom';
 import './AdminAnalyticsChart.css';
 
 const AdminAnalyticsChart = () => {
     const { analytics } = useFeedback();
+    const navigate = useNavigate();
 
     const statusData = analytics?.status || {};
     const categoryData = analytics?.category || {};
@@ -31,10 +33,14 @@ const AdminAnalyticsChart = () => {
     const categories = Object.keys(categoryCounts);
     const maxCount = Math.max(...Object.values(statusCounts), 1);
 
+    // Filter to show only top 2 categories
+    // Filter to show only top 1 category
+    const visibleCategories = categories.slice(0, 1);
+
     return (
         <div className="analytics-charts">
             <div className="chart-container">
-                <h3>Feedback Status Distribution</h3>
+                <h3>Status</h3>
                 <div className="bar-chart">
                     {statuses.map(status => {
                         const count = statusCounts[status] || 0;
@@ -59,23 +65,28 @@ const AdminAnalyticsChart = () => {
             </div>
 
             <div className="chart-container">
-                <h3>Category Breakdown</h3>
+                <div className="category-header">
+                    <h3>Category Breakdown</h3>
+                </div>
                 <div className="category-list">
-                    {categories.map(cat => (
+                    {visibleCategories.map(cat => (
                         <div key={cat} className="category-item">
-                            <div className="category-info">
-                                <span className="category-name">{cat}</span>
-                                <span className="category-count">{categoryCounts[cat]}</span>
-                            </div>
+                            <span className="category-name">{cat}</span>
                             <div className="progress-bar-bg">
                                 <div
                                     className="progress-bar-fill"
                                     style={{ width: `${(categoryCounts[cat] / total) * 100}%` }}
                                 ></div>
                             </div>
+                            <span className="category-count">{categoryCounts[cat]}</span>
                         </div>
                     ))}
                 </div>
+                {categories.length > 1 && (
+                    <button className="view-all-btn" onClick={() => navigate('/admin/feedbacks')}>
+                        View All
+                    </button>
+                )}
             </div>
         </div>
     );

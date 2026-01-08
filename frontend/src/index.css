@@ -848,7 +848,8 @@ body {
 /* Row 2: Graphs */
 .dashboard-row-2 {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  /* Updated to equal width */
   gap: 24px;
 }
 
@@ -1251,4 +1252,68 @@ body {
   .welcome-card {
     flex-direction: column;
   }
+}
+
+/* Status Badges Global */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 700;
+  text-transform: capitalize;
+  display: inline-block;
+}
+
+.status-badge.submitted {
+  color: #A0AEC0;
+}
+
+.status-badge.open {
+  color: #F6AD55;
+}
+
+.status-badge.pending {
+  color: #F6AD55;
+}
+
+.status-badge.in-progress {
+  color: #0075FF;
+}
+
+.status-badge.working {
+  color: #0075FF;
+}
+
+.status-badge.resolved {
+  color: #01B574;
+}
+
+.status-badge.closed {
+  color: #E53E3E;
+}
+
+.status-badge.declined {
+  color: #C53030;
+  border-color: rgba(197, 48, 48, 0.3);
+}
+
+[data-theme='light'] .status-badge {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #4A5568;
+}
+
+[data-theme='light'] .status-badge.declined {
+  color: #C53030;
+}
+
+[data-theme='light'] .status-badge.resolved {
+  color: #01B574;
+}
+
+[data-theme='light'] .status-badge.in-progress {
+  color: #0075FF;
 }

@@ -40,6 +40,7 @@ const AllFeedbacksPage = () => {
                         <option value="Working" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Working</option>
                         <option value="Resolved" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Resolved</option>
                         <option value="Closed" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Closed</option>
+                        <option value="Declined" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Declined</option>
                     </select>
                 </div>
             </div>

@@ -106,7 +106,8 @@
 /* Row 2: Welcome & Analytics */
 .dashboard-row-2 {
     display: grid;
-    grid-template-columns: 1.2fr 2fr;
+    grid-template-columns: 1fr 1fr;
+    /* Equal width */
     gap: 24px;
     align-items: stretch;
     /* Ensure equal height */
@@ -122,8 +123,6 @@
 .welcome-content h3 {
     font-size: 22px;
     margin-bottom: 10px;
-    position: relative;
-    z-index: 2;
 }
 
 .welcome-content p {
@@ -131,8 +130,6 @@
     font-size: 14px;
     line-height: 1.6;
     max-width: 90%;
-    position: relative;
-    z-index: 2;
 }
 
 .welcome-action {
@@ -142,26 +139,6 @@
     font-weight: 700;
     cursor: pointer;
     transition: opacity 0.2s;
-    position: relative;
-    z-index: 2;
-}
-
-.welcome-action:hover {
-    opacity: 0.8;
-}
-
-/* Welcome Blob for Abstract Shape */
-.welcome-blob {
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(0, 117, 255, 0.4) 0%, rgba(33, 212, 253, 0.1) 70%, transparent 100%);
-    border-radius: 50%;
-    filter: blur(40px);
-    z-index: 1;
-    pointer-events: none;
 }
 
 .welcome-action:hover {

@@ -68,7 +68,7 @@ const AdminDashboard = () => {
                             View All Items <FaArrowUp style={{ transform: 'rotate(45deg)' }} />
                         </div>
                     </div>
-                    <div className="welcome-blob"></div>
+
                 </div>
 
                 {/* Analytics Section */}

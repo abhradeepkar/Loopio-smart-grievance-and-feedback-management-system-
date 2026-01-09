@@ -1,29 +1,22 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (options) => {
-    console.log(`DEBUG EMAIL: Host=${process.env.SMTP_HOST} Port=465 User=${process.env.SMTP_EMAIL}`);
+    try {
+        const data = await resend.emails.send({
+            from: 'Loopio Support <onboarding@resend.dev>',
+            to: options.email,
+            subject: options.subject,
+            html: options.message.replace(/\n/g, '<br>'),
+            text: options.message
+        });
 
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.SMTP_EMAIL,
-            pass: process.env.SMTP_PASSWORD,
-        },
-        logger: true,
-        debug: true,
-        connectionTimeout: 10000, // 10 seconds timeout
-    });
-
-    const message = {
-        from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-    };
-
-    await transporter.sendMail(message);
+        console.log('Email sent successfully:', data);
+    } catch (error) {
+        console.error('Error sending email:', error);
+        throw new Error('Email could not be sent');
+    }
 };
 
 module.exports = sendEmail;

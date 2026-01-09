@@ -1,0 +1,221 @@
+/* WorkflowSection.css */
+
+.wf-section {
+    padding: 80px 20px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: auto;
+}
+
+.wf-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.wf-node {
+    padding: 12px 24px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.wf-icon {
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+/* Node Types */
+.wf-start {
+    border: 2px solid var(--hp-text);
+    border-radius: 50px;
+    /* Pill shape for Start/End */
+    min-width: 80px;
+    background: var(--hp-bg);
+}
+
+.wf-box {
+    background: var(--hp-dark-card);
+    border: 1px solid var(--hp-border);
+    border-radius: 8px;
+    min-width: 180px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.wf-box:hover {
+    transform: translateY(-3px);
+    border-color: var(--hp-accent);
+    box-shadow: 0 0 15px var(--hp-glow);
+}
+
+.wf-diamond {
+    background: var(--hp-dark-card);
+    border: 1px solid var(--hp-primary);
+    width: 150px;
+    height: 150px;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.wf-diamond span {
+    transform: rotate(-45deg);
+    text-align: center;
+    width: 100%;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* User Role Colors */
+.wf-user {
+    border-left: 4px solid #00C2FF;
+}
+
+/* User Blue */
+.wf-admin {
+    border-left: 4px solid #FFD700;
+}
+
+/* Admin Gold */
+.wf-dev {
+    border-left: 4px solid #00FF88;
+}
+
+/* Dev Green */
+.wf-db {
+    border-style: double;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Lines */
+.wf-line-vertical {
+    width: 2px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.wf-line-vertical-small {
+    width: 2px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 auto;
+}
+
+.wf-line-vertical-long {
+    width: 2px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    margin-top: -20px;
+    /* Overlap nicely */
+}
+
+/* Branch Logic */
+.wf-branches {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.wf-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+}
+
+.wf-branch-label {
+    background: var(--hp-bg);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--hp-text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 5px;
+    position: relative;
+    z-index: 5;
+}
+
+/* Branch Connectors (Horizontal line above branches) */
+.wf-branch-connectors {
+    width: 70%;
+    /* Tune this to match branch width */
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    position: relative;
+    top: -10px;
+    /* Adjust based on diamond margin */
+}
+
+/* Admin Split Logic */
+.wf-admin-split {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.wf-connector-curve-container {
+    position: absolute;
+    right: -120px;
+    /* Push analytics to side */
+    top: 50px;
+    width: 100px;
+    height: 50px;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    border-right: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-right-radius: 20px;
+}
+
+.wf-sub-branch-right {
+    position: absolute;
+    right: -240px;
+    top: 100px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .wf-branches {
+        flex-direction: column;
+        gap: 60px;
+    }
+
+    .wf-branch-connectors {
+        display: none;
+        /* Hide horizontal line on mobile */
+    }
+
+    .wf-sub-branch-right {
+        position: relative;
+        right: 0;
+        top: 0;
+        margin-top: 20px;
+    }
+
+    .wf-connector-curve-container {
+        display: none;
+    }
+
+    .wf-branch::before {
+        content: '';
+        width: 2px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        position: absolute;
+        top: -40px;
+    }
+}

@@ -4,6 +4,7 @@ import { FaRocket, FaChartLine, FaUsers, FaCogs, FaGithub, FaGoogle, FaLinkedin,
 import './HomePage.css';
 import dashboardPreview from '../assets/dashboard-Preview.png';
 import loopioLogo from '../assets/Loopio_logo_.png';
+import WorkflowSection from './WorkflowSection';
 
 import { useTheme } from '../context/ThemeContext';
 
@@ -74,6 +75,10 @@ const HomePage = () => {
                     <img src={dashboardPreview} alt="Dashboard Preview" />
                 </div>
             </header >
+
+            {/* Workflow Diagram Section */}
+            <WorkflowSection />
+
 
             {/* Features Section */}
             < section id="features" className="hp-features" >

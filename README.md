@@ -1,7 +1,5 @@
 ﻿# Loopio-smart-grievance-and-feedback-management-system-
-
-# Loopio – Full Stack Feedback Management System
-
+
 Loopio is a modern full-stack feedback management system built with  
 **React + Vite (Frontend)** and **Node.js + Express + MongoDB (Backend)**.  
 The system allows users to submit feedback, track status, and manage their profile.  

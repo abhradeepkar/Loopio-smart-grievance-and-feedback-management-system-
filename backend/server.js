@@ -45,6 +45,9 @@ io.on('connection', (socket) => {
     });
 });
 
+//  TRUST PROXY (required for Render/cloud deployments with rate limiting)
+app.set('trust proxy', 1);
+
 //  SECURITY MIDDLEWARE
 app.use(helmet({
     crossOriginResourcePolicy: false,
@@ -80,7 +83,6 @@ mongoose.connect(
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/feedbacks', require('./routes/feedback'));
-app.use('/api/notifications', require('./routes/notification'));
 app.use('/api/notifications', require('./routes/notification'));
 
 //  DEFAULT ROUTE 
